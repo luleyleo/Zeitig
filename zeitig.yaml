@@ -1,0 +1,15 @@
+---
+new_subject_name: ""
+subjects:
+  - name: Program
+    time:
+      secs: 0
+      nanos: 0
+  - name: Study
+    time:
+      secs: 0
+      nanos: 0
+  - name: Watch Videos
+    time:
+      secs: 0
+      nanos: 0
