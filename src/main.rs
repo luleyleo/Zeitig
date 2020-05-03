@@ -9,6 +9,7 @@ use std::{path::Path, sync::Arc, time::Duration};
 
 // payload: WidgetId
 const START: Selector = Selector::new("zeitig.start");
+const SAVE: Selector = Selector::new("zeitig.save");
 const SCHEDULE_AUTO_SAVE: Selector = Selector::new("zeitig.schedule-auto-save");
 
 #[derive(Clone, Data, Lens, Serialize, Deserialize)]
@@ -159,6 +160,10 @@ impl<W: Widget<AppState>> Controller<AppState, W> for AutoSaver {
             Event::Command(cmd) if cmd.selector == SCHEDULE_AUTO_SAVE => {
                 self.timer = Some(ctx.request_timer(Duration::from_secs(5)));
             }
+            Event::Command(cmd) if cmd.selector == SAVE => {
+                self.timer = None;
+                write_state(data.clone());
+            }
             Event::Timer(token) if Some(*token) == self.timer => {
                 write_state(data.clone());
             }
@@ -230,7 +235,7 @@ impl<W: Widget<Subject>> Controller<Subject, W> for Ticker {
     ) {
         match (old_data.active, data.active) {
             (false, true) => ctx.submit_command(Command::new(START, ctx.widget_id()), None),
-            (true, false) => self.timer = None,
+            (true, false) => ctx.submit_command(SAVE, None),
             _ => (),
         }
         child.update(ctx, old_data, data, env);
