@@ -236,7 +236,10 @@ impl<W: Widget<Subject>> Controller<Subject, W> for Ticker {
     ) {
         match (old_data.active, data.active) {
             (false, true) => ctx.submit_command(Command::new(START, ctx.widget_id()), None),
-            (true, false) => ctx.submit_command(SAVE, None),
+            (true, false) => {
+                self.timer = None;
+                ctx.submit_command(SAVE, None)
+            }
             _ => (),
         }
         child.update(ctx, old_data, data, env);
