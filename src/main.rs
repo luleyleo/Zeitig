@@ -165,6 +165,7 @@ impl<W: Widget<AppState>> Controller<AppState, W> for AutoSaver {
                 write_state(data.clone());
             }
             Event::Timer(token) if Some(*token) == self.timer => {
+                self.timer = None;
                 write_state(data.clone());
             }
             _ => (),
