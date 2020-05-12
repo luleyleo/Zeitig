@@ -17,6 +17,9 @@ use auto_saver::{AutoSaver, SAVE_NOW};
 mod command_receiver;
 use command_receiver::CommandReceiver;
 
+mod ticker;
+use ticker::Ticker;
+
 const SELECT_ACTION: Selector = Selector::new("zeitig.select_action");
 const SELECT_SUBJECT: Selector = Selector::new("zeitig.select_subject");
 
@@ -84,7 +87,8 @@ fn ui() -> impl Widget<AppState> {
                             })
                             .lens(AppState::active),
                         )
-                        .padding(10.0),
+                        .padding(10.0)
+                        .controller(Ticker::new()),
                 )
                 .with_child(
                     Flex::row()

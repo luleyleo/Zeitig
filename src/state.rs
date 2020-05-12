@@ -1,7 +1,7 @@
 use druid::{Data, Lens};
 use serde::{Deserialize, Serialize};
 use std::fmt::Display;
-use std::{collections::HashMap, sync::Arc, time::Duration};
+use std::{collections::HashMap, sync::Arc, time::Duration, ops::{DerefMut, Deref}};
 
 #[derive(Clone, Default, Data, Lens, Serialize, Deserialize)]
 pub struct AppState {
@@ -74,12 +74,17 @@ pub struct Setup(Action, Subject);
 pub struct TimeTable(Arc<HashMap<Setup, SpentTime>>);
 
 impl TimeTable {
-    pub fn get(&self, action: &Action, subject: &Subject) -> Option<&SpentTime> {
-        self.0.get(&Setup(action.clone(), subject.clone()))
+    pub fn get(&self, action: &Action, subject: &Subject) -> SpentTime {
+        self.0
+            .get(&Setup(action.clone(), subject.clone()))
+            .cloned()
+            .unwrap_or_default()
     }
 
-    pub fn get_mut(&mut self, action: &Action, subject: &Subject) -> Option<&mut SpentTime> {
-        Arc::make_mut(&mut self.0).get_mut(&Setup(action.clone(), subject.clone()))
+    pub fn get_mut(&mut self, action: &Action, subject: &Subject) -> &mut SpentTime {
+        Arc::make_mut(&mut self.0)
+            .entry(Setup(action.clone(), subject.clone()))
+            .or_insert(SpentTime::default())
     }
 }
 
@@ -89,6 +94,20 @@ pub struct SpentTime(Duration);
 impl Default for SpentTime {
     fn default() -> Self {
         SpentTime(Duration::from_secs(0))
+    }
+}
+
+impl Deref for SpentTime {
+    type Target = Duration;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl DerefMut for SpentTime {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
     }
 }
 
@@ -116,10 +135,7 @@ mod lenses {
     impl Lens<AppState, SpentTime> for SpendTimeLens {
         fn with<V, F: FnOnce(&SpentTime) -> V>(&self, data: &AppState, f: F) -> V {
             if let (Some(action), Some(subject)) = (&data.selected_action, &data.selected_subject) {
-                f(data
-                    .time_table
-                    .get(action, subject)
-                    .unwrap_or(&SpentTime::default()))
+                f(&data.time_table.get(action, subject))
             } else {
                 f(&SpentTime::default())
             }
@@ -127,10 +143,7 @@ mod lenses {
 
         fn with_mut<V, F: FnOnce(&mut SpentTime) -> V>(&self, data: &mut AppState, f: F) -> V {
             if let (Some(action), Some(subject)) = (&data.selected_action, &data.selected_subject) {
-                f(data
-                    .time_table
-                    .get_mut(action, subject)
-                    .unwrap_or(&mut SpentTime::default()))
+                f(data.time_table.get_mut(action, subject))
             } else {
                 f(&mut SpentTime::default())
             }
