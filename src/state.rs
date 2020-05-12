@@ -12,19 +12,60 @@ pub struct AppState {
     pub selected_subject: Option<Subject>,
     pub time_table: TimeTable,
 
+    pub creating: Creating,
+    pub creating_name: String,
+
     #[serde(skip)]
     pub active: bool,
 }
 
 impl AppState {
+    #[allow(non_upper_case_globals)]
     pub const spent_time: lenses::SpendTimeLens = lenses::SpendTimeLens;
+}
+
+#[derive(Clone, Data, Serialize, Deserialize, PartialEq, Eq)]
+pub enum Creating {
+    None,
+    Action,
+    Subject,
+}
+
+impl Default for Creating {
+    fn default() -> Self {
+        Creating::None
+    }
 }
 
 #[derive(Clone, Data, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub struct Subject(Arc<String>);
 
+impl Subject {
+    pub fn new(name: String) -> Self {
+        Subject(Arc::new(name))
+    }
+}
+
+impl AsRef<str> for Subject {
+    fn as_ref(&self) -> &str {
+        &self.0
+    }
+}
+
 #[derive(Clone, Data, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub struct Action(Arc<String>);
+
+impl Action {
+    pub fn new(name: String) -> Self {
+        Action(Arc::new(name))
+    }
+}
+
+impl AsRef<str> for Action {
+    fn as_ref(&self) -> &str {
+        &self.0
+    }
+}
 
 #[derive(Clone, Data, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub struct Setup(Action, Subject);
