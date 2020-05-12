@@ -1,6 +1,5 @@
-
-use druid::{TimerToken, Selector, Widget, widget::Controller, EventCtx, Event, Env};
-use crate::{write_state, state::AppState};
+use crate::{state::AppState, write_state};
+use druid::{widget::Controller, Env, Event, EventCtx, Selector, TimerToken, Widget};
 use std::time::Duration;
 
 const SCHEDULE_AUTO_SAVE: Selector = Selector::new("zeitig.schedule-auto-save");

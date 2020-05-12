@@ -1,15 +1,14 @@
-
-use druid::{widget::Controller, Widget, EventCtx, Event, Env, KeyCode};
+use druid::{widget::Controller, Env, Event, EventCtx, KeyCode, Widget};
 use std::any::Any;
 
 pub struct EnterController<D> {
-    callback: Box<dyn Fn(&mut EventCtx, &mut D)>
+    callback: Box<dyn Fn(&mut EventCtx, &mut D)>,
 }
 
 impl<D> EnterController<D> {
     pub fn new(callback: impl Fn(&mut EventCtx, &mut D) + Any) -> Self {
         Self {
-            callback: Box::new(callback)
+            callback: Box::new(callback),
         }
     }
 }
@@ -23,4 +22,4 @@ impl<D, W: Widget<D>> Controller<D, W> for EnterController<D> {
             }
         }
     }
-} 
+}

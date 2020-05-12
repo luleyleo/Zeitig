@@ -10,3 +10,7 @@ serde_yaml = "0.8.11"
 
 [dependencies.druid]
 git = "https://github.com/xi-editor/druid"
+
+[dependencies.match_macro]
+git = "https://github.com/finnerale/druid-enum-helpers"
+package = "match-macro"

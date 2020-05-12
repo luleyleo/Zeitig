@@ -1,7 +1,8 @@
 use druid::{
     widget::{Button, CrossAxisAlignment, Either, Flex, Label, List, SizedBox, TextBox},
-    AppLauncher, Selector, Widget, WidgetExt, WindowDesc,
+    AppLauncher, Command, Selector, UnitPoint, Widget, WidgetExt, WindowDesc,
 };
+use match_macro::match_widget;
 use std::{mem, path::Path, sync::Arc};
 
 mod state;
@@ -12,6 +13,9 @@ use enter::EnterController;
 
 mod auto_saver;
 use auto_saver::{AutoSaver, SAVE_NOW};
+
+mod command_receiver;
+use command_receiver::CommandReceiver;
 
 const SELECT_ACTION: Selector = Selector::new("zeitig.select_action");
 const SELECT_SUBJECT: Selector = Selector::new("zeitig.select_subject");
@@ -44,41 +48,103 @@ fn main() {
         .expect("Failed to launch Zeitig.");
 }
 
+fn selected_action_label() -> impl Widget<Option<Action>> {
+    match_widget! { Option<Action>,
+        Some(Action) => Label::dynamic(|action: &Action, _| format!("{}", action.as_ref())),
+        None => Label::new("No Action"),
+    }
+}
+
+fn selected_subject_label() -> impl Widget<Option<Subject>> {
+    match_widget! { Option<Subject>,
+        Some(Subject) => Label::dynamic(|subject: &Subject, _| format!("{}", subject.as_ref())),
+        None => Label::new("No Subject"),
+    }
+}
+
 fn ui() -> impl Widget<AppState> {
     Flex::column()
         .with_child(
-            Flex::row()
-                .with_flex_child(
-                    Label::dynamic(|time, _| format!("{}", time))
-                        .lens(AppState::spent_time)
-                        .expand_width(),
-                    1.0,
-                )
-                .with_spacer(5.0)
+            Flex::column()
                 .with_child(
-                    Button::new(|active: &bool, _: &_| {
-                        if !active { "Start" } else { "Stop" }.into()
-                    })
-                    .on_click(|_, active: &mut bool, _| {
-                        *active = !*active;
-                    })
-                    .lens(AppState::active),
+                    Flex::row()
+                        .with_flex_child(
+                            Label::dynamic(|time, _| format!("{}", time))
+                                .lens(AppState::spent_time)
+                                .expand_width(),
+                            1.0,
+                        )
+                        .with_spacer(5.0)
+                        .with_child(
+                            Button::new(|active: &bool, _: &_| {
+                                if !active { "Start" } else { "Stop" }.into()
+                            })
+                            .on_click(|_, active: &mut bool, _| {
+                                *active = !*active;
+                            })
+                            .lens(AppState::active),
+                        )
+                        .padding(10.0),
                 )
-                .padding(10.0),
+                .with_child(
+                    Flex::row()
+                        .with_flex_child(
+                            selected_action_label()
+                                .lens(AppState::selected_action)
+                                .align_horizontal(UnitPoint::CENTER)
+                                .expand_width(),
+                            1.0,
+                        )
+                        .with_flex_child(
+                            selected_subject_label()
+                                .lens(AppState::selected_subject)
+                                .align_horizontal(UnitPoint::CENTER)
+                                .expand_width(),
+                            1.0,
+                        )
+                        .controller(CommandReceiver::new(|_, data: &mut AppState, cmd| {
+                            if cmd.selector == SELECT_ACTION {
+                                let action = cmd.get_object::<Action>().unwrap();
+                                data.selected_action = Some(action.clone());
+                            }
+                            if cmd.selector == SELECT_SUBJECT {
+                                let subject = cmd.get_object::<Subject>().unwrap();
+                                data.selected_subject = Some(subject.clone());
+                            }
+                        })),
+                ),
         )
         .with_spacer(10.0)
         .with_flex_child(
             Flex::row()
                 .cross_axis_alignment(CrossAxisAlignment::Start)
                 .with_flex_child(
-                    List::new(|| Label::dynamic(|action: &Action, _| action.as_ref().to_string()))
-                        .lens(AppState::actions)
-                        .expand_width(),
+                    List::new(|| {
+                        Label::dynamic(|action: &Action, _| action.as_ref().to_string())
+                            .padding(3.0)
+                            .on_click(|ctx, action, _| {
+                                ctx.submit_command(
+                                    Command::new(SELECT_ACTION, action.clone()),
+                                    None,
+                                );
+                            })
+                            .align_horizontal(UnitPoint::CENTER)
+                    })
+                    .lens(AppState::actions)
+                    .expand_width(),
                     1.0,
                 )
                 .with_flex_child(
                     List::new(|| {
                         Label::dynamic(|subject: &Subject, _| subject.as_ref().to_string())
+                            .padding(3.0)
+                            .on_click(|ctx, subject, _| {
+                                ctx.submit_command(
+                                    Command::new(SELECT_SUBJECT, subject.clone()),
+                                    None,
+                                );
+                            })
+                            .align_horizontal(UnitPoint::CENTER)
                     })
                     .lens(AppState::subjects)
                     .expand_width(),
