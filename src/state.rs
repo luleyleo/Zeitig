@@ -4,7 +4,7 @@ use std::fmt::Display;
 use std::{collections::HashMap, sync::Arc, ops::{DerefMut, Deref}, time::{Duration}};
 use time::OffsetDateTime;
 
-#[derive(Clone, Default, Data, Lens, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, Data, Lens, Serialize, Deserialize)]
 pub struct AppState {
     pub new_name: String,
     pub actions: Arc<Vec<Action>>,
@@ -25,7 +25,7 @@ impl AppState {
     pub const spent_time: lenses::SpendTimeLens = lenses::SpendTimeLens;
 }
 
-#[derive(Clone, Data, Serialize, Deserialize)]
+#[derive(Debug, Clone, Data, Serialize, Deserialize)]
 pub struct DateTime(#[data(same_fn = "PartialEq::eq")] OffsetDateTime);
 
 impl DateTime {
@@ -34,13 +34,13 @@ impl DateTime {
     }
 }
 
-#[derive(Clone, Data, Lens, Serialize, Deserialize)]
+#[derive(Debug, Clone, Data, Lens, Serialize, Deserialize)]
 pub struct ActiveSession {
     pub started: DateTime,
     pub duration: SpentTime,
 }
 
-#[derive(Clone, Data, Lens, Serialize, Deserialize)]
+#[derive(Debug, Clone, Data, Lens, Serialize, Deserialize)]
 pub struct Session {
     pub action: Action,
     pub subject: Subject,
@@ -49,7 +49,7 @@ pub struct Session {
     pub ended: DateTime,
 }
 
-#[derive(Clone, Data, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Data, Serialize, Deserialize, PartialEq, Eq)]
 pub enum Creating {
     None,
     Action,
@@ -62,7 +62,7 @@ impl Default for Creating {
     }
 }
 
-#[derive(Clone, Data, Serialize, Deserialize, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Data, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub struct Subject(Arc<String>);
 
 impl Subject {
@@ -77,7 +77,7 @@ impl AsRef<str> for Subject {
     }
 }
 
-#[derive(Clone, Data, Serialize, Deserialize, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Data, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub struct Action(Arc<String>);
 
 impl Action {
@@ -92,7 +92,7 @@ impl AsRef<str> for Action {
     }
 }
 
-#[derive(Clone, Default, Data, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, Data, Serialize, Deserialize)]
 pub struct TimeTable(Arc<HashMap<(Action, Subject), SpentTime>>);
 
 impl TimeTable {
@@ -110,7 +110,7 @@ impl TimeTable {
     }
 }
 
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SpentTime(Duration);
 
 impl Default for SpentTime {
