@@ -1,12 +1,15 @@
 use druid::{
-    widget::{Button, CrossAxisAlignment, Either, Flex, Label, List, SizedBox, TextBox},
-    AppLauncher, Command, Selector, UnitPoint, Widget, WidgetExt, WindowDesc,
+    widget::{
+        Button, CrossAxisAlignment, Either, Flex, Label, List, MainAxisAlignment, Painter,
+        SizedBox, TextBox,
+    },
+    AppLauncher, Command, Data, EventCtx, Selector, UnitPoint, Widget, WidgetExt, WindowDesc,
 };
 use match_macro::match_widget;
-use std::{mem, path::Path, sync::Arc};
+use std::{mem, path::Path, sync::Arc, time::Duration};
 
 mod state;
-use state::{Action, AppState, Creating, Subject};
+use state::{Action, ActiveSession, AppState, Creating, DateTime, Session, SpentTime, Subject};
 
 mod enter;
 use enter::EnterController;
@@ -51,6 +54,29 @@ fn main() {
         .expect("Failed to launch Zeitig.");
 }
 
+fn start_new_session(data: &mut AppState) {
+    data.active = Some(ActiveSession {
+        started: DateTime::now(),
+        duration: SpentTime::default(),
+    })
+}
+
+fn end_session(data: &mut AppState) {
+    if data.active.is_some() {
+        let active = data.active.take().unwrap();
+        if *active.duration > Duration::from_secs(30) {
+            let session = Session {
+                action: data.selected_action.clone().unwrap(),
+                subject: data.selected_subject.clone().unwrap(),
+                started: active.started,
+                duration: active.duration,
+                ended: DateTime::now(),
+            };
+            Arc::make_mut(&mut data.history).push(session);
+        }
+    }
+}
+
 fn selected_action_label() -> impl Widget<Option<Action>> {
     match_widget! { Option<Action>,
         Some(Action) => Label::dynamic(|action: &Action, _| format!("{}", action.as_ref())),
@@ -65,6 +91,23 @@ fn selected_subject_label() -> impl Widget<Option<Subject>> {
     }
 }
 
+fn session_duration_label() -> impl Widget<Option<ActiveSession>> {
+    match_widget! { Option<ActiveSession>,
+        Some(ActiveSession) => Label::dynamic(|session: &ActiveSession, _| format!("Session: {}", session.duration)),
+        None => Label::new("Session: not running"),
+    }
+}
+
+fn separator<T: Data>() -> impl Widget<T> {
+    use druid::RenderContext;
+    Painter::new(|ctx, _, env| {
+        let bounds = ctx.size().to_rect();
+        ctx.fill(bounds, &env.get(druid::theme::BORDER_DARK));
+    })
+    .expand_width()
+    .fix_height(2.0)
+}
+
 fn ui() -> impl Widget<AppState> {
     Flex::column()
         .with_child(
@@ -72,52 +115,62 @@ fn ui() -> impl Widget<AppState> {
                 .with_child(
                     Flex::row()
                         .with_flex_child(
-                            Label::dynamic(|time, _| format!("{}", time))
-                                .lens(AppState::spent_time)
+                            Flex::column()
+                                .cross_axis_alignment(CrossAxisAlignment::Start)
+                                .with_child(session_duration_label().lens(AppState::active))
+                                .with_child(
+                                    Label::dynamic(|time, _| format!("Total: {}", time))
+                                        .lens(AppState::spent_time),
+                                )
                                 .expand_width(),
                             1.0,
                         )
                         .with_spacer(5.0)
                         .with_child(
-                            Button::new(|active: &bool, _: &_| {
-                                if !active { "Start" } else { "Stop" }.into()
+                            Button::new(|data: &AppState, _: &_| match data.active {
+                                None => "Start".to_string(),
+                                Some(_) => "Stop".to_string(),
                             })
-                            .on_click(|_, active: &mut bool, _| {
-                                *active = !*active;
-                            })
-                            .lens(AppState::active),
+                            .on_click(|_, data: &mut AppState, _| {
+                                match data.active {
+                                    Some(_) => end_session(data),
+                                    None => start_new_session(data),
+                                }
+                            }),
                         )
-                        .padding(10.0)
+                        .padding((10.0, 10.0, 10.0, 5.0))
                         .controller(Ticker::new()),
                 )
                 .with_child(
                     Flex::row()
-                        .with_flex_child(
+                        .main_axis_alignment(MainAxisAlignment::Center)
+                        .with_child(
                             selected_action_label()
                                 .lens(AppState::selected_action)
-                                .align_horizontal(UnitPoint::CENTER)
-                                .expand_width(),
-                            1.0,
+                                .align_horizontal(UnitPoint::CENTER),
                         )
-                        .with_flex_child(
+                        .with_spacer(5.0)
+                        .with_child(
                             selected_subject_label()
                                 .lens(AppState::selected_subject)
-                                .align_horizontal(UnitPoint::CENTER)
-                                .expand_width(),
-                            1.0,
+                                .align_horizontal(UnitPoint::CENTER),
                         )
                         .controller(CommandReceiver::new(|_, data: &mut AppState, cmd| {
                             if cmd.selector == SELECT_ACTION {
+                                end_session(data);
                                 let action = cmd.get_object::<Action>().unwrap();
                                 data.selected_action = Some(action.clone());
                             }
                             if cmd.selector == SELECT_SUBJECT {
+                                end_session(data);
                                 let subject = cmd.get_object::<Subject>().unwrap();
                                 data.selected_subject = Some(subject.clone());
                             }
                         })),
                 ),
         )
+        .with_spacer(5.0)
+        .with_child(separator())
         .with_spacer(10.0)
         .with_flex_child(
             Flex::row()
@@ -174,21 +227,21 @@ fn ui() -> impl Widget<AppState> {
                 .with_child(
                     TextBox::new()
                         .lens(AppState::creating_name)
-                        .controller(EnterController::new(|ctx, data: &mut AppState| match data
-                            .creating
-                        {
-                            Creating::None => (),
-                            Creating::Action => {
-                                Arc::make_mut(&mut data.actions)
-                                    .push(Action::new(mem::take(&mut data.creating_name)));
-                                ctx.submit_command(SAVE_NOW, None);
-                            }
-                            Creating::Subject => {
-                                Arc::make_mut(&mut data.subjects)
-                                    .push(Subject::new(mem::take(&mut data.creating_name)));
-                                ctx.submit_command(SAVE_NOW, None);
-                            }
-                        }))
+                        .controller(EnterController::new(
+                            |ctx: &mut EventCtx, data: &mut AppState| match data.creating {
+                                Creating::None => (),
+                                Creating::Action => {
+                                    Arc::make_mut(&mut data.actions)
+                                        .push(Action::new(mem::take(&mut data.creating_name)));
+                                    ctx.submit_command(SAVE_NOW, None);
+                                }
+                                Creating::Subject => {
+                                    Arc::make_mut(&mut data.subjects)
+                                        .push(Subject::new(mem::take(&mut data.creating_name)));
+                                    ctx.submit_command(SAVE_NOW, None);
+                                }
+                            },
+                        ))
                         .expand_width(),
                 )
                 .padding(5.0),

@@ -25,11 +25,13 @@ impl<W: Widget<AppState>> Controller<AppState, W> for Ticker {
     ) {
         if let Event::Timer(token) = event {
             if Some(*token) == self.timer {
-                if let (Some(action), Some(subject)) = (
+                if let (Some(action), Some(subject), Some(session)) = (
                     data.selected_action.as_ref(),
                     data.selected_subject.as_ref(),
+                    data.active.as_mut(),
                 ) {
-                    **data.time_table.get_mut(&action, &subject) += Duration::from_secs(1);
+                    **data.time_table.get_mut(&action, &subject) += INTERVAL;
+                    *session.duration += INTERVAL;
                     self.timer = Some(ctx.request_timer(INTERVAL));
                 }
             }
@@ -45,7 +47,7 @@ impl<W: Widget<AppState>> Controller<AppState, W> for Ticker {
         data: &AppState,
         env: &Env,
     ) {
-        match (old_data.active, data.active) {
+        match (old_data.active.is_some(), data.active.is_some()) {
             (false, true) => self.timer = Some(ctx.request_timer(INTERVAL)),
             (true, false) => {
                 self.timer = None;

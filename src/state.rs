@@ -1,7 +1,8 @@
 use druid::{Data, Lens};
 use serde::{Deserialize, Serialize};
 use std::fmt::Display;
-use std::{collections::HashMap, sync::Arc, time::Duration, ops::{DerefMut, Deref}};
+use std::{collections::HashMap, sync::Arc, ops::{DerefMut, Deref}, time::{Duration}};
+use time::OffsetDateTime;
 
 #[derive(Clone, Default, Data, Lens, Serialize, Deserialize)]
 pub struct AppState {
@@ -11,17 +12,41 @@ pub struct AppState {
     pub subjects: Arc<Vec<Subject>>,
     pub selected_subject: Option<Subject>,
     pub time_table: TimeTable,
+    pub history: Arc<Vec<Session>>,
 
     pub creating: Creating,
     pub creating_name: String,
 
-    #[serde(skip)]
-    pub active: bool,
+    pub active: Option<ActiveSession>,
 }
 
 impl AppState {
     #[allow(non_upper_case_globals)]
     pub const spent_time: lenses::SpendTimeLens = lenses::SpendTimeLens;
+}
+
+#[derive(Clone, Data, Serialize, Deserialize)]
+pub struct DateTime(#[data(same_fn = "PartialEq::eq")] OffsetDateTime);
+
+impl DateTime {
+    pub fn now() -> Self {
+        DateTime(OffsetDateTime::now_local())
+    }
+}
+
+#[derive(Clone, Data, Lens, Serialize, Deserialize)]
+pub struct ActiveSession {
+    pub started: DateTime,
+    pub duration: SpentTime,
+}
+
+#[derive(Clone, Data, Lens, Serialize, Deserialize)]
+pub struct Session {
+    pub action: Action,
+    pub subject: Subject,
+    pub started: DateTime,
+    pub duration: SpentTime,
+    pub ended: DateTime,
 }
 
 #[derive(Clone, Data, Serialize, Deserialize, PartialEq, Eq)]

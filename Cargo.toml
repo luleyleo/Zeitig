@@ -5,8 +5,9 @@ authors = ["Leopold Luley <git@leopoldluley.de>"]
 edition = "2018"
 
 [dependencies]
-serde = { version = "1.0.106", features = ["derive", "rc"]}
+serde = { version = "1.0.106", features = ["derive", "rc"] }
 serde_yaml = "0.8.11"
+time = { version = "0.2.15", features = ["serde"] }
 
 [dependencies.druid]
 git = "https://github.com/xi-editor/druid"
