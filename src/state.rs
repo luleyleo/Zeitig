@@ -67,23 +67,20 @@ impl AsRef<str> for Action {
     }
 }
 
-#[derive(Clone, Data, Serialize, Deserialize, PartialEq, Eq, Hash)]
-pub struct Setup(Action, Subject);
-
 #[derive(Clone, Default, Data, Serialize, Deserialize)]
-pub struct TimeTable(Arc<HashMap<Setup, SpentTime>>);
+pub struct TimeTable(Arc<HashMap<(Action, Subject), SpentTime>>);
 
 impl TimeTable {
     pub fn get(&self, action: &Action, subject: &Subject) -> SpentTime {
         self.0
-            .get(&Setup(action.clone(), subject.clone()))
+            .get(&(action.clone(), subject.clone()))
             .cloned()
             .unwrap_or_default()
     }
 
     pub fn get_mut(&mut self, action: &Action, subject: &Subject) -> &mut SpentTime {
         Arc::make_mut(&mut self.0)
-            .entry(Setup(action.clone(), subject.clone()))
+            .entry((action.clone(), subject.clone()))
             .or_insert(SpentTime::default())
     }
 }
