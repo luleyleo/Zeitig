@@ -27,19 +27,19 @@ const SELECT_ACTION: Selector = Selector::new("zeitig.select_action");
 const SELECT_SUBJECT: Selector = Selector::new("zeitig.select_subject");
 
 fn read_state() -> AppState {
-    let path = Path::new("zeitig.yaml");
+    let path = Path::new("zeitig.mp");
     if path.exists() {
-        let data = std::fs::read_to_string(path).expect("Failed to read data.");
-        serde_yaml::from_str(&data).expect("Failed to deserialize data.")
+        let data = std::fs::read(path).expect("Failed to read data.");
+        rmp_serde::from_slice(&data).expect("Failed to deserialize data.")
     } else {
         AppState::default()
     }
 }
 
 fn write_state(state: AppState) {
-    let path = Path::new("zeitig.yaml");
-    let data = serde_yaml::to_string(&state).expect("Failed to serialize data.");
-    std::fs::write(path, data.as_bytes()).expect("Failed to write data.");
+    let path = Path::new("zeitig.mp");
+    let data = rmp_serde::to_vec(&state).expect("Failed to serialize data.");
+    std::fs::write(path, &data).expect("Failed to write data.");
 }
 
 fn main() {
