@@ -8,6 +8,7 @@ edition = "2018"
 serde = { version = "1.0.106", features = ["derive", "rc"] }
 rmp-serde = "0.14.3"
 time = { version = "0.2.15", features = ["serde"] }
+directories = "2.0.2"
 
 [dependencies.druid]
 git = "https://github.com/xi-editor/druid"
