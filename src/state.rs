@@ -1,18 +1,23 @@
+use druid::im::{HashMap, Vector};
 use druid::{Data, Lens};
 use serde::{Deserialize, Serialize};
 use std::fmt::Display;
-use std::{collections::HashMap, sync::Arc, ops::{DerefMut, Deref}, time::{Duration}};
+use std::{
+    ops::{Deref, DerefMut},
+    sync::Arc,
+    time::Duration,
+};
 use time::OffsetDateTime;
 
 #[derive(Debug, Clone, Default, Data, Lens, Serialize, Deserialize)]
 pub struct AppState {
     pub new_name: String,
-    pub actions: Arc<Vec<Action>>,
+    pub actions: Vector<Action>,
     pub selected_action: Option<Action>,
-    pub subjects: Arc<Vec<Subject>>,
+    pub subjects: Vector<Subject>,
     pub selected_subject: Option<Subject>,
     pub time_table: TimeTable,
-    pub history: Arc<Vec<Session>>,
+    pub history: Vector<Session>,
 
     pub creating: Creating,
     pub creating_name: String,
@@ -93,7 +98,7 @@ impl AsRef<str> for Action {
 }
 
 #[derive(Debug, Clone, Default, Data, Serialize, Deserialize)]
-pub struct TimeTable(Arc<HashMap<(Action, Subject), SpentTime>>);
+pub struct TimeTable(HashMap<(Action, Subject), SpentTime>);
 
 impl TimeTable {
     pub fn get(&self, action: &Action, subject: &Subject) -> SpentTime {
@@ -104,7 +109,7 @@ impl TimeTable {
     }
 
     pub fn get_mut(&mut self, action: &Action, subject: &Subject) -> &mut SpentTime {
-        Arc::make_mut(&mut self.0)
+        self.0
             .entry((action.clone(), subject.clone()))
             .or_insert(SpentTime::default())
     }

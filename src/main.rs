@@ -7,7 +7,11 @@ use druid::{
     AppLauncher, Command, Data, EventCtx, Selector, UnitPoint, Widget, WidgetExt, WindowDesc,
 };
 use match_macro::match_widget;
-use std::{mem, path::{PathBuf, Path}, sync::Arc, time::Duration};
+use std::{
+    mem,
+    path::{Path, PathBuf},
+    time::Duration,
+};
 
 mod state;
 use state::{Action, ActiveSession, AppState, Creating, DateTime, Session, SpentTime, Subject};
@@ -44,6 +48,9 @@ fn write_state(state: AppState) {
 }
 
 fn data_file_path() -> PathBuf {
+    if cfg!(debug_symbols) {
+        return PathBuf::from("./zeitig.mp");
+    }
     if let Some(pd) = ProjectDirs::from("de", "leopoldluley", "Zeitig") {
         let data = pd.data_dir();
         if std::fs::create_dir_all(data).is_ok() {
@@ -83,7 +90,7 @@ fn end_session(data: &mut AppState) {
                 duration: active.duration,
                 ended: DateTime::now(),
             };
-            Arc::make_mut(&mut data.history).push(session);
+            data.history.push_back(session);
         }
     }
 }
@@ -242,13 +249,14 @@ fn ui() -> impl Widget<AppState> {
                             |ctx: &mut EventCtx, data: &mut AppState| match data.creating {
                                 Creating::None => (),
                                 Creating::Action => {
-                                    Arc::make_mut(&mut data.actions)
-                                        .push(Action::new(mem::take(&mut data.creating_name)));
+                                    data.actions
+                                        .push_back(Action::new(mem::take(&mut data.creating_name)));
                                     ctx.submit_command(SAVE_NOW, None);
                                 }
                                 Creating::Subject => {
-                                    Arc::make_mut(&mut data.subjects)
-                                        .push(Subject::new(mem::take(&mut data.creating_name)));
+                                    data.subjects.push_back(Subject::new(mem::take(
+                                        &mut data.creating_name,
+                                    )));
                                     ctx.submit_command(SAVE_NOW, None);
                                 }
                             },
