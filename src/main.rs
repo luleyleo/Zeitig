@@ -52,7 +52,7 @@ fn data_file_path() -> PathBuf {
         println!("Accessing debug data file.");
         return PathBuf::from("./zeitig.mp");
     }
-    if let Some(pd) = ProjectDirs::from("de", "leopoldluley", "Zeitig") {
+    if let Some(pd) = ProjectDirs::from("", "", "Zeitig") {
         let data = pd.data_dir();
         if std::fs::create_dir_all(data).is_ok() {
             return data.join("zeitig.mp");
