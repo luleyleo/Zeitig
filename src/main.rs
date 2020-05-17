@@ -96,6 +96,32 @@ fn end_session(data: &mut AppState) {
     }
 }
 
+fn handle_command(_ctx: &mut EventCtx, data: &mut AppState, cmd: &Command) {
+    if cmd.selector == SELECT_ACTION {
+        end_session(data);
+        let action = cmd.get_object::<Action>().unwrap();
+        data.selected_action = Some(action.clone());
+    }
+    if cmd.selector == SELECT_SUBJECT {
+        end_session(data);
+        let subject = cmd.get_object::<Subject>().unwrap();
+        data.selected_subject = Some(subject.clone());
+    }
+}
+
+fn ui() -> impl Widget<AppState> {
+    Flex::column()
+        .with_child(header())
+        .with_spacer(5.0)
+        .with_child(separator())
+        .with_spacer(10.0)
+        .with_flex_child(lists(), 1.0)
+        .with_child(dialogs())
+        .with_child(buttons())
+        .controller(CommandReceiver::new(handle_command))
+        .controller(AutoSaver::new())
+}
+
 fn selected_action_label() -> impl Widget<Option<Action>> {
     match_widget! { Option<Action>,
         Some(Action) => Label::dynamic(|action: &Action, _| format!("{}", action.as_ref())),
@@ -127,188 +153,164 @@ fn separator<T: Data>() -> impl Widget<T> {
     .fix_height(2.0)
 }
 
-fn ui() -> impl Widget<AppState> {
+fn header() -> impl Widget<AppState> {
     Flex::column()
         .with_child(
-            Flex::column()
-                .with_child(
-                    Flex::row()
-                        .with_flex_child(
-                            Flex::column()
-                                .cross_axis_alignment(CrossAxisAlignment::Start)
-                                .with_child(session_duration_label().lens(AppState::active))
-                                .with_child(
-                                    Label::dynamic(|time, _| format!("Total: {}", time))
-                                        .lens(AppState::spent_time),
-                                )
-                                .expand_width(),
-                            1.0,
-                        )
-                        .with_spacer(5.0)
-                        .with_child(
-                            Button::new(|data: &AppState, _: &_| match data.active {
-                                None => "Start".to_string(),
-                                Some(_) => "Stop".to_string(),
-                            })
-                            .on_click(|_, data: &mut AppState, _| {
-                                match data.active {
-                                    Some(_) => end_session(data),
-                                    None => start_new_session(data),
-                                }
-                            }),
-                        )
-                        .padding((10.0, 10.0, 10.0, 5.0))
-                        .controller(Ticker::new()),
-                )
-                .with_child(
-                    Flex::row()
-                        .main_axis_alignment(MainAxisAlignment::Center)
-                        .with_child(
-                            selected_action_label()
-                                .lens(AppState::selected_action)
-                                .align_horizontal(UnitPoint::CENTER),
-                        )
-                        .with_spacer(5.0)
-                        .with_child(
-                            selected_subject_label()
-                                .lens(AppState::selected_subject)
-                                .align_horizontal(UnitPoint::CENTER),
-                        )
-                        .controller(CommandReceiver::new(|_, data: &mut AppState, cmd| {
-                            if cmd.selector == SELECT_ACTION {
-                                end_session(data);
-                                let action = cmd.get_object::<Action>().unwrap();
-                                data.selected_action = Some(action.clone());
-                            }
-                            if cmd.selector == SELECT_SUBJECT {
-                                end_session(data);
-                                let subject = cmd.get_object::<Subject>().unwrap();
-                                data.selected_subject = Some(subject.clone());
-                            }
-                        })),
-                ),
-        )
-        .with_spacer(5.0)
-        .with_child(separator())
-        .with_spacer(10.0)
-        .with_flex_child(
             Flex::row()
-                .cross_axis_alignment(CrossAxisAlignment::Start)
                 .with_flex_child(
-                    Scroll::new(List::new(|| {
-                        Label::dynamic(|action: &Action, _| action.as_ref().to_string())
-                            .padding(3.0)
-                            .on_click(|ctx, action, _| {
-                                ctx.submit_command(
-                                    Command::new(SELECT_ACTION, action.clone()),
-                                    None,
-                                );
-                            })
-                            .align_horizontal(UnitPoint::CENTER)
-                    }))
-                    .vertical()
-                    .lens(AppState::actions)
-                    .expand_width(),
-                    1.0,
-                )
-                .with_flex_child(
-                    Scroll::new(List::new(|| {
-                        Label::dynamic(|subject: &Subject, _| subject.as_ref().to_string())
-                            .padding(3.0)
-                            .on_click(|ctx, subject, _| {
-                                ctx.submit_command(
-                                    Command::new(SELECT_SUBJECT, subject.clone()),
-                                    None,
-                                );
-                            })
-                            .align_horizontal(UnitPoint::CENTER)
-                    }))
-                    .vertical()
-                    .lens(AppState::subjects)
-                    .expand_width(),
-                    1.0,
-                )
-                .expand_height(),
-            1.0,
-        )
-        .with_child(Either::new(
-            |data, _| data.creating != Creating::None,
-            Flex::column()
-                .with_child(
-                    Label::dynamic(|data: &AppState, _| {
-                        match data.creating {
-                            Creating::None => "No Title",
-                            Creating::Action => "Add new action",
-                            Creating::Subject => "Add new subject",
-                        }
-                        .to_string()
-                    })
-                    .expand_width(),
-                )
-                .with_child(
-                    TextBox::new()
-                        .lens(AppState::creating_name)
-                        .controller(EnterController::new(
-                            |ctx: &mut EventCtx, data: &mut AppState| match data.creating {
-                                Creating::None => (),
-                                Creating::Action => {
-                                    data.actions
-                                        .push_back(Action::new(mem::take(&mut data.creating_name)));
-                                    ctx.submit_command(SAVE_NOW, None);
-                                }
-                                Creating::Subject => {
-                                    data.subjects.push_back(Subject::new(mem::take(
-                                        &mut data.creating_name,
-                                    )));
-                                    ctx.submit_command(SAVE_NOW, None);
-                                }
-                            },
-                        ))
+                    Flex::column()
+                        .cross_axis_alignment(CrossAxisAlignment::Start)
+                        .with_child(session_duration_label().lens(AppState::active))
+                        .with_child(
+                            Label::dynamic(|time, _| format!("Total: {}", time))
+                                .lens(AppState::spent_time),
+                        )
                         .expand_width(),
+                    1.0,
                 )
-                .padding(5.0),
-            SizedBox::empty(),
-        ))
+                .with_spacer(5.0)
+                .with_child(
+                    Button::new(|data: &AppState, _: &_| match data.active {
+                        None => "Start".to_string(),
+                        Some(_) => "Stop".to_string(),
+                    })
+                    .on_click(|_, data: &mut AppState, _| match data.active {
+                        Some(_) => end_session(data),
+                        None => start_new_session(data),
+                    }),
+                )
+                .padding((10.0, 10.0, 10.0, 5.0))
+                .controller(Ticker::new()),
+        )
         .with_child(
             Flex::row()
-                .with_flex_child(
-                    Button::new(|data: &AppState, _: &_| {
-                        if data.creating == Creating::Action {
-                            "Cancel"
-                        } else {
-                            "New Action"
-                        }
-                        .into()
-                    })
-                    .on_click(|_, data: &mut AppState, _| {
-                        data.creating = if data.creating == Creating::Action {
-                            Creating::None
-                        } else {
-                            Creating::Action
-                        }
-                    })
-                    .expand_width(),
-                    1.0,
+                .main_axis_alignment(MainAxisAlignment::Center)
+                .with_child(
+                    selected_action_label()
+                        .lens(AppState::selected_action)
+                        .align_horizontal(UnitPoint::CENTER),
                 )
-                .with_flex_child(
-                    Button::new(|data: &AppState, _: &_| {
-                        if data.creating == Creating::Subject {
-                            "Cancel"
-                        } else {
-                            "New Subject"
-                        }
-                        .into()
-                    })
-                    .on_click(|_, data: &mut AppState, _| {
-                        data.creating = if data.creating == Creating::Subject {
-                            Creating::None
-                        } else {
-                            Creating::Subject
-                        }
-                    })
-                    .expand_width(),
-                    1.0,
-                ),
+                .with_spacer(5.0)
+                .with_child(
+                    selected_subject_label()
+                        .lens(AppState::selected_subject)
+                        .align_horizontal(UnitPoint::CENTER),
+                )
         )
-        .controller(AutoSaver::new())
+}
+
+fn lists() -> impl Widget<AppState> {
+    Flex::row()
+        .cross_axis_alignment(CrossAxisAlignment::Start)
+        .with_flex_child(
+            Scroll::new(List::new(|| {
+                Label::dynamic(|action: &Action, _| action.as_ref().to_string())
+                    .padding(3.0)
+                    .on_click(|ctx, action, _| {
+                        ctx.submit_command(Command::new(SELECT_ACTION, action.clone()), None);
+                    })
+                    .align_horizontal(UnitPoint::CENTER)
+            }))
+            .vertical()
+            .lens(AppState::actions)
+            .expand_width(),
+            1.0,
+        )
+        .with_flex_child(
+            Scroll::new(List::new(|| {
+                Label::dynamic(|subject: &Subject, _| subject.as_ref().to_string())
+                    .padding(3.0)
+                    .on_click(|ctx, subject, _| {
+                        ctx.submit_command(Command::new(SELECT_SUBJECT, subject.clone()), None);
+                    })
+                    .align_horizontal(UnitPoint::CENTER)
+            }))
+            .vertical()
+            .lens(AppState::subjects)
+            .expand_width(),
+            1.0,
+        )
+        .expand_height()
+}
+
+fn dialogs() -> impl Widget<AppState> {
+    Either::new(
+        |data, _| data.creating != Creating::None,
+        Flex::column()
+            .with_child(
+                Label::dynamic(|data: &AppState, _| {
+                    match data.creating {
+                        Creating::None => "No Title",
+                        Creating::Action => "Add new action",
+                        Creating::Subject => "Add new subject",
+                    }
+                    .to_string()
+                })
+                .expand_width(),
+            )
+            .with_child(
+                TextBox::new()
+                    .lens(AppState::creating_name)
+                    .controller(EnterController::new(
+                        |ctx: &mut EventCtx, data: &mut AppState| match data.creating {
+                            Creating::None => (),
+                            Creating::Action => {
+                                data.actions
+                                    .push_back(Action::new(mem::take(&mut data.creating_name)));
+                                ctx.submit_command(SAVE_NOW, None);
+                            }
+                            Creating::Subject => {
+                                data.subjects
+                                    .push_back(Subject::new(mem::take(&mut data.creating_name)));
+                                ctx.submit_command(SAVE_NOW, None);
+                            }
+                        },
+                    ))
+                    .expand_width(),
+            )
+            .padding(5.0),
+        SizedBox::empty(),
+    )
+}
+
+fn buttons() -> impl Widget<AppState> {
+    Flex::row()
+        .with_flex_child(
+            Button::new(|data: &AppState, _: &_| {
+                if data.creating == Creating::Action {
+                    "Cancel"
+                } else {
+                    "New Action"
+                }
+                .into()
+            })
+            .on_click(|_, data: &mut AppState, _| {
+                data.creating = if data.creating == Creating::Action {
+                    Creating::None
+                } else {
+                    Creating::Action
+                }
+            })
+            .expand_width(),
+            1.0,
+        )
+        .with_flex_child(
+            Button::new(|data: &AppState, _: &_| {
+                if data.creating == Creating::Subject {
+                    "Cancel"
+                } else {
+                    "New Subject"
+                }
+                .into()
+            })
+            .on_click(|_, data: &mut AppState, _| {
+                data.creating = if data.creating == Creating::Subject {
+                    Creating::None
+                } else {
+                    Creating::Subject
+                }
+            })
+            .expand_width(),
+            1.0,
+        )
 }
