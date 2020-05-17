@@ -1,7 +1,7 @@
 use directories::ProjectDirs;
 use druid::{
     widget::{
-        Button, CrossAxisAlignment, Either, Flex, Label, List, MainAxisAlignment, Painter,
+        Button, CrossAxisAlignment, Either, Flex, Label, List, MainAxisAlignment, Painter, Scroll,
         SizedBox, TextBox,
     },
     AppLauncher, Command, Data, EventCtx, Selector, UnitPoint, Widget, WidgetExt, WindowDesc,
@@ -195,7 +195,7 @@ fn ui() -> impl Widget<AppState> {
             Flex::row()
                 .cross_axis_alignment(CrossAxisAlignment::Start)
                 .with_flex_child(
-                    List::new(|| {
+                    Scroll::new(List::new(|| {
                         Label::dynamic(|action: &Action, _| action.as_ref().to_string())
                             .padding(3.0)
                             .on_click(|ctx, action, _| {
@@ -205,13 +205,14 @@ fn ui() -> impl Widget<AppState> {
                                 );
                             })
                             .align_horizontal(UnitPoint::CENTER)
-                    })
+                    }))
+                    .vertical()
                     .lens(AppState::actions)
                     .expand_width(),
                     1.0,
                 )
                 .with_flex_child(
-                    List::new(|| {
+                    Scroll::new(List::new(|| {
                         Label::dynamic(|subject: &Subject, _| subject.as_ref().to_string())
                             .padding(3.0)
                             .on_click(|ctx, subject, _| {
@@ -221,7 +222,8 @@ fn ui() -> impl Widget<AppState> {
                                 );
                             })
                             .align_horizontal(UnitPoint::CENTER)
-                    })
+                    }))
+                    .vertical()
                     .lens(AppState::subjects)
                     .expand_width(),
                     1.0,
