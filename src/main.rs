@@ -48,7 +48,8 @@ fn write_state(state: AppState) {
 }
 
 fn data_file_path() -> PathBuf {
-    if cfg!(debug_symbols) {
+    if cfg!(debug_assertions) {
+        println!("Accessing debug data file.");
         return PathBuf::from("./zeitig.mp");
     }
     if let Some(pd) = ProjectDirs::from("de", "leopoldluley", "Zeitig") {
