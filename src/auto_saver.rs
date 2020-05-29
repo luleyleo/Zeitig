@@ -2,7 +2,6 @@ use crate::{state::AppState, write_state};
 use druid::{widget::Controller, Env, Event, EventCtx, Selector, TimerToken, Widget};
 use std::time::Duration;
 
-const SCHEDULE_AUTO_SAVE: Selector = Selector::new("zeitig.schedule-auto-save");
 pub const SAVE_NOW: Selector = Selector::new("zeitig.save");
 
 pub struct AutoSaver {
@@ -25,9 +24,6 @@ impl<W: Widget<AppState>> Controller<AppState, W> for AutoSaver {
         env: &Env,
     ) {
         match event {
-            Event::Command(cmd) if cmd.is(SCHEDULE_AUTO_SAVE) => {
-                self.timer = Some(ctx.request_timer(Duration::from_secs(5)));
-            }
             Event::Command(cmd) if cmd.is(SAVE_NOW) => {
                 self.timer = None;
                 write_state(data.clone());
@@ -50,7 +46,7 @@ impl<W: Widget<AppState>> Controller<AppState, W> for AutoSaver {
         env: &Env,
     ) {
         if self.timer.is_none() {
-            ctx.submit_command(SCHEDULE_AUTO_SAVE, None);
+            self.timer = Some(ctx.request_timer(Duration::from_secs(5)));
         }
         child.update(ctx, old_data, data, env)
     }
