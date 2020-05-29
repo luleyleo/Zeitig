@@ -193,7 +193,7 @@ fn header() -> impl Widget<AppState> {
                     selected_subject_label()
                         .lens(AppState::selected_subject)
                         .align_horizontal(UnitPoint::CENTER),
-                )
+                ),
         )
 }
 
@@ -205,7 +205,7 @@ fn lists() -> impl Widget<AppState> {
                 Label::dynamic(|action: &Action, _| action.as_ref().to_string())
                     .padding(3.0)
                     .on_click(|ctx, action, _| {
-                        ctx.submit_command(SELECT_ACTION.with( action.clone()), None);
+                        ctx.submit_command(SELECT_ACTION.with(action.clone()), None);
                     })
                     .align_horizontal(UnitPoint::CENTER)
             }))
@@ -254,13 +254,15 @@ fn dialogs() -> impl Widget<AppState> {
                             Creating::None => (),
                             Creating::Action => {
                                 data.actions
-                                    .push_back(Action::new(mem::take(&mut data.creating_name)));
+                                    .insert_ord(Action::new(mem::take(&mut data.creating_name)));
                                 ctx.submit_command(SAVE_NOW, None);
+                                data.creating = Creating::None;
                             }
                             Creating::Subject => {
                                 data.subjects
-                                    .push_back(Subject::new(mem::take(&mut data.creating_name)));
+                                    .insert_ord(Subject::new(mem::take(&mut data.creating_name)));
                                 ctx.submit_command(SAVE_NOW, None);
+                                data.creating = Creating::None;
                             }
                         },
                     ))

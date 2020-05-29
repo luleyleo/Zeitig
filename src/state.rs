@@ -67,7 +67,7 @@ impl Default for Creating {
     }
 }
 
-#[derive(Debug, Clone, Data, Serialize, Deserialize, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Data, Serialize, Deserialize, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct Subject(Arc<String>);
 
 impl Subject {
@@ -82,7 +82,7 @@ impl AsRef<str> for Subject {
     }
 }
 
-#[derive(Debug, Clone, Data, Serialize, Deserialize, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Data, Serialize, Deserialize, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct Action(Arc<String>);
 
 impl Action {
