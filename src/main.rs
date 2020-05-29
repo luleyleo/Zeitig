@@ -28,8 +28,8 @@ use command_receiver::CommandReceiver;
 mod ticker;
 use ticker::Ticker;
 
-const SELECT_ACTION: Selector = Selector::new("zeitig.select_action");
-const SELECT_SUBJECT: Selector = Selector::new("zeitig.select_subject");
+const SELECT_ACTION: Selector<Action> = Selector::new("zeitig.select_action");
+const SELECT_SUBJECT: Selector<Subject> = Selector::new("zeitig.select_subject");
 
 fn read_state() -> AppState {
     let path = data_file_path();
@@ -97,14 +97,12 @@ fn end_session(data: &mut AppState) {
 }
 
 fn handle_command(_ctx: &mut EventCtx, data: &mut AppState, cmd: &Command) {
-    if cmd.selector == SELECT_ACTION {
+    if let Some(action) = cmd.get(SELECT_ACTION) {
         end_session(data);
-        let action = cmd.get_object::<Action>().unwrap();
         data.selected_action = Some(action.clone());
     }
-    if cmd.selector == SELECT_SUBJECT {
+    if let Some(subject) = cmd.get(SELECT_SUBJECT) {
         end_session(data);
-        let subject = cmd.get_object::<Subject>().unwrap();
         data.selected_subject = Some(subject.clone());
     }
 }
@@ -207,7 +205,7 @@ fn lists() -> impl Widget<AppState> {
                 Label::dynamic(|action: &Action, _| action.as_ref().to_string())
                     .padding(3.0)
                     .on_click(|ctx, action, _| {
-                        ctx.submit_command(Command::new(SELECT_ACTION, action.clone()), None);
+                        ctx.submit_command(SELECT_ACTION.with( action.clone()), None);
                     })
                     .align_horizontal(UnitPoint::CENTER)
             }))
@@ -221,7 +219,7 @@ fn lists() -> impl Widget<AppState> {
                 Label::dynamic(|subject: &Subject, _| subject.as_ref().to_string())
                     .padding(3.0)
                     .on_click(|ctx, subject, _| {
-                        ctx.submit_command(Command::new(SELECT_SUBJECT, subject.clone()), None);
+                        ctx.submit_command(SELECT_SUBJECT.with(subject.clone()), None);
                     })
                     .align_horizontal(UnitPoint::CENTER)
             }))
