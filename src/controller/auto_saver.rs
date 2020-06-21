@@ -1,6 +1,7 @@
-use crate::{state::AppState, write_state};
 use druid::{widget::Controller, Env, Event, EventCtx, Selector, TimerToken, Widget};
 use std::time::Duration;
+
+use crate::state::{self, AppState};
 
 pub const SAVE_NOW: Selector = Selector::new("zeitig.save");
 
@@ -11,6 +12,11 @@ pub struct AutoSaver {
 impl AutoSaver {
     pub fn new() -> Self {
         Self { timer: None }
+    }
+
+    fn save(&mut self, data: &mut AppState) {
+        self.timer = None;
+        state::files::write_state(data.clone());
     }
 }
 
@@ -24,14 +30,8 @@ impl<W: Widget<AppState>> Controller<AppState, W> for AutoSaver {
         env: &Env,
     ) {
         match event {
-            Event::Command(cmd) if cmd.is(SAVE_NOW) => {
-                self.timer = None;
-                write_state(data.clone());
-            }
-            Event::Timer(token) if Some(*token) == self.timer => {
-                self.timer = None;
-                write_state(data.clone());
-            }
+            Event::Command(cmd) if cmd.is(SAVE_NOW) => self.save(data),
+            Event::Timer(token) if Some(*token) == self.timer => self.save(data),
             _ => (),
         }
         child.event(ctx, event, data, env)

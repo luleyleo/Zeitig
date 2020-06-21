@@ -1,13 +1,18 @@
-use druid::im::{HashMap, Vector};
-use druid::{Data, Lens};
+use druid::{
+    im::{HashMap, Vector},
+    Data, Lens,
+};
 use serde::{Deserialize, Serialize};
-use std::fmt::Display;
 use std::{
+    fmt::Display,
     ops::{Deref, DerefMut},
     sync::Arc,
     time::Duration,
 };
 use time::OffsetDateTime;
+
+pub mod files;
+mod lenses;
 
 #[derive(Debug, Clone, Default, Data, Lens, Serialize, Deserialize)]
 pub struct AppState {
@@ -151,29 +156,5 @@ impl Display for SpentTime {
 impl Data for SpentTime {
     fn same(&self, other: &Self) -> bool {
         self.0.as_secs() == other.0.as_secs()
-    }
-}
-
-mod lenses {
-    use super::{AppState, SpentTime};
-    use druid::Lens;
-
-    pub struct SpendTimeLens;
-    impl Lens<AppState, SpentTime> for SpendTimeLens {
-        fn with<V, F: FnOnce(&SpentTime) -> V>(&self, data: &AppState, f: F) -> V {
-            if let (Some(action), Some(subject)) = (&data.selected_action, &data.selected_subject) {
-                f(&data.time_table.get(action, subject))
-            } else {
-                f(&SpentTime::default())
-            }
-        }
-
-        fn with_mut<V, F: FnOnce(&mut SpentTime) -> V>(&self, data: &mut AppState, f: F) -> V {
-            if let (Some(action), Some(subject)) = (&data.selected_action, &data.selected_subject) {
-                f(data.time_table.get_mut(action, subject))
-            } else {
-                f(&mut SpentTime::default())
-            }
-        }
     }
 }

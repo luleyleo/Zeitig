@@ -1,6 +1,7 @@
-use crate::{auto_saver::SAVE_NOW, state::AppState};
 use druid::{widget::Controller, Env, Event, EventCtx, TimerToken, Widget};
 use std::time::Duration;
+
+use crate::{controller::SAVE_NOW, state::AppState};
 
 const INTERVAL: Duration = Duration::from_secs(1);
 

@@ -1,6 +1,6 @@
 use druid::{
-    widget::SizedBox, BoxConstraints, Data, Env, Event, EventCtx, LayoutCtx, LifeCycle,
-    LifeCycleCtx, PaintCtx, Size, UpdateCtx, Widget, WidgetPod,
+    widget::{prelude::*, SizedBox},
+    Data, WidgetPod,
 };
 
 /// A widget that switches between two possible child views, for `Data` that
