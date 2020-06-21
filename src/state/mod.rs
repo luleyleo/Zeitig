@@ -32,7 +32,7 @@ pub struct AppState {
 
 impl AppState {
     #[allow(non_upper_case_globals)]
-    pub const spent_time: lenses::SpendTimeLens = lenses::SpendTimeLens;
+    pub const spent_time: lenses::SpendTime = lenses::SpendTime;
 }
 
 #[derive(Debug, Clone, Data, Serialize, Deserialize)]
