@@ -821,27 +821,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "match-macro"
-version = "0.1.0"
-source = "git+https://github.com/finnerale/druid-enum-helpers#c859ca68494e7307bfff975a99342cb42d922a8b"
-dependencies = [
- "druid",
- "match-macro-impl",
- "proc-macro-hack",
-]
-
-[[package]]
-name = "match-macro-impl"
-version = "0.1.0"
-source = "git+https://github.com/finnerale/druid-enum-helpers#c859ca68494e7307bfff975a99342cb42d922a8b"
-dependencies = [
- "proc-macro-hack",
- "proc-macro2",
- "quote",
- "syn",
-]
-
-[[package]]
 name = "num"
 version = "0.1.42"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1615,7 +1594,7 @@ dependencies = [
  "directories",
  "druid",
  "im",
- "match-macro",
+ "log",
  "rmp-serde",
  "serde",
  "time",

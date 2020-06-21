@@ -10,11 +10,8 @@ rmp-serde = "0.14.3"
 time = { version = "0.2.15", features = ["serde"] }
 directories = "2.0.2"
 im = { version = "15.0.0", features = ["serde"] }
+log = "0.4.8"
 
 [dependencies.druid]
 git = "https://github.com/xi-editor/druid"
 features = ["im"]
-
-[dependencies.match_macro]
-git = "https://github.com/finnerale/druid-enum-helpers"
-package = "match-macro"

@@ -6,7 +6,6 @@ use druid::{
     },
     AppLauncher, Command, Data, EventCtx, Selector, UnitPoint, Widget, WidgetExt, WindowDesc,
 };
-use match_macro::match_widget;
 use std::{
     mem,
     path::{Path, PathBuf},
@@ -27,6 +26,9 @@ use command_receiver::CommandReceiver;
 
 mod ticker;
 use ticker::Ticker;
+
+mod maybe;
+use maybe::Maybe;
 
 const SELECT_ACTION: Selector<Action> = Selector::new("zeitig.select_action");
 const SELECT_SUBJECT: Selector<Subject> = Selector::new("zeitig.select_subject");
@@ -121,24 +123,24 @@ fn ui() -> impl Widget<AppState> {
 }
 
 fn selected_action_label() -> impl Widget<Option<Action>> {
-    match_widget! { Option<Action>,
-        Some(Action) => Label::dynamic(|action: &Action, _| format!("{}", action.as_ref())),
-        None => Label::new("No Action"),
-    }
+    Maybe::new(
+        Label::dynamic(|action: &Action, _| format!("{}", action.as_ref())),
+        Label::new("No Action"),
+    )
 }
 
 fn selected_subject_label() -> impl Widget<Option<Subject>> {
-    match_widget! { Option<Subject>,
-        Some(Subject) => Label::dynamic(|subject: &Subject, _| format!("{}", subject.as_ref())),
-        None => Label::new("No Subject"),
-    }
+    Maybe::new(
+        Label::dynamic(|subject: &Subject, _| format!("{}", subject.as_ref())),
+        Label::new("No Subject"),
+    )
 }
 
 fn session_duration_label() -> impl Widget<Option<ActiveSession>> {
-    match_widget! { Option<ActiveSession>,
-        Some(ActiveSession) => Label::dynamic(|session: &ActiveSession, _| format!("Session: {}", session.duration)),
-        None => Label::new("Session: not running"),
-    }
+    Maybe::new(
+        Label::dynamic(|session: &ActiveSession, _| format!("Session: {}", session.duration)),
+        Label::new("Session: not running"),
+    )
 }
 
 fn separator<T: Data>() -> impl Widget<T> {
@@ -183,17 +185,9 @@ fn header() -> impl Widget<AppState> {
         .with_child(
             Flex::row()
                 .main_axis_alignment(MainAxisAlignment::Center)
-                .with_child(
-                    selected_action_label()
-                        .lens(AppState::selected_action)
-                        .align_horizontal(UnitPoint::CENTER),
-                )
-                .with_spacer(5.0)
-                .with_child(
-                    selected_subject_label()
-                        .lens(AppState::selected_subject)
-                        .align_horizontal(UnitPoint::CENTER),
-                ),
+                .with_child(selected_action_label().lens(AppState::selected_action))
+                .with_child(Label::new(""))
+                .with_child(selected_subject_label().lens(AppState::selected_subject)),
         )
 }
 
