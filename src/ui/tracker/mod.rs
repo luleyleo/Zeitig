@@ -3,13 +3,17 @@ use druid::{
         Button, CrossAxisAlignment, Either, Flex, Label, List, MainAxisAlignment, Painter, Scroll,
         SizedBox, TextBox,
     },
-    Command, Data, EventCtx, Selector, UnitPoint, Widget, WidgetExt,
+    Command, Data, EventCtx, Selector, UnitPoint, Widget, WidgetExt, WindowDesc,
 };
 use std::{mem, time::Duration};
 
 use crate::{
     controller::{self, AutoSaver, CommandReceiver, EnterController, Ticker},
-    state::{Action, ActiveSession, AppState, Creating, DateTime, Session, SpentTime, Subject},
+    state::{
+        insights::Insights, Action, ActiveSession, AppState, Creating, DateTime, Session,
+        SpentTime, Subject,
+    },
+    ui,
     widgets::Maybe,
 };
 
@@ -211,41 +215,22 @@ fn dialogs() -> impl Widget<AppState> {
 fn buttons() -> impl Widget<AppState> {
     Flex::row()
         .with_flex_child(
-            Button::new(|data: &AppState, _: &_| {
-                if data.creating == Creating::Action {
-                    "Cancel"
-                } else {
-                    "New Action"
-                }
-                .into()
-            })
-            .on_click(|_, data: &mut AppState, _| {
-                data.creating = if data.creating == Creating::Action {
-                    Creating::None
-                } else {
-                    Creating::Action
-                }
-            })
-            .expand_width(),
+            Button::new("New Topic")
+                .on_click(|_, _data: &mut AppState, _| {
+                    log::error!("Creating new topics is not implemented yet.");
+                })
+                .expand_width(),
             1.0,
         )
         .with_flex_child(
-            Button::new(|data: &AppState, _: &_| {
-                if data.creating == Creating::Subject {
-                    "Cancel"
-                } else {
-                    "New Subject"
-                }
-                .into()
-            })
-            .on_click(|_, data: &mut AppState, _| {
-                data.creating = if data.creating == Creating::Subject {
-                    Creating::None
-                } else {
-                    Creating::Subject
-                }
-            })
-            .expand_width(),
+            Button::new("Insights")
+                .on_click(|ctx, data: &mut AppState, _| {
+                    if data.insights.is_none() {
+                        data.insights = Some(Insights::generate(data));
+                    }
+                    ctx.new_window(WindowDesc::new(ui::insights).title("Insights"));
+                })
+                .expand_width(),
             1.0,
         )
 }
