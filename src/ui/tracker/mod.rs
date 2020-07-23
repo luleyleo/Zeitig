@@ -1,11 +1,11 @@
 use druid::{
     widget::{
-        Button, CrossAxisAlignment, Either, Flex, Label, List, MainAxisAlignment, Painter, Scroll,
+        Button, CrossAxisAlignment, Flex, Label, List, MainAxisAlignment, Painter, Scroll,
         SizedBox, TextBox,
     },
     Command, Data, EventCtx, Selector, UnitPoint, Widget, WidgetExt, WindowDesc,
 };
-use std::{mem, time::Duration};
+use std::time::Duration;
 
 use crate::{
     controller::{self, AutoSaver, CommandReceiver, EnterController, Ticker},
@@ -14,7 +14,7 @@ use crate::{
         SpentTime, Subject,
     },
     ui,
-    widgets::Maybe,
+    widgets::{Creator, Maybe},
 };
 
 const SELECT_ACTION: Selector<Action> = Selector::new("zeitig.select_action");
@@ -171,53 +171,88 @@ fn lists() -> impl Widget<AppState> {
 }
 
 fn dialogs() -> impl Widget<AppState> {
-    Either::new(
-        |data, _| data.creating != Creating::None,
-        Flex::column()
-            .with_child(
-                Label::dynamic(|data: &AppState, _| {
-                    match data.creating {
-                        Creating::None => "No Title",
-                        Creating::Action => "Add new action",
-                        Creating::Subject => "Add new subject",
+    const ADVANCE: Selector<Creating> = Selector::new("zeitig.dialogs.advance");
+    fn handle_advance(ctx: &mut EventCtx, data: &mut AppState, cmd: &Command) {
+        if let Some(creating) = cmd.get(ADVANCE) {
+            if creating == &Creating::Idle(()) {
+                match &data.creating {
+                    Creating::Action(a) => {
+                        data.actions.insert_ord(Action::new(a.clone()));
+                        ctx.submit_command(controller::SAVE_NOW, None);
                     }
-                    .to_string()
-                })
-                .expand_width(),
-            )
-            .with_child(
-                TextBox::new()
-                    .lens(AppState::creating_name)
-                    .controller(EnterController::new(
-                        |ctx: &mut EventCtx, data: &mut AppState| match data.creating {
-                            Creating::None => (),
-                            Creating::Action => {
-                                data.actions
-                                    .insert_ord(Action::new(mem::take(&mut data.creating_name)));
-                                ctx.submit_command(controller::SAVE_NOW, None);
-                                data.creating = Creating::None;
-                            }
-                            Creating::Subject => {
-                                data.subjects
-                                    .insert_ord(Subject::new(mem::take(&mut data.creating_name)));
-                                ctx.submit_command(controller::SAVE_NOW, None);
-                                data.creating = Creating::None;
-                            }
-                        },
-                    ))
-                    .expand_width(),
-            )
-            .padding(5.0),
-        SizedBox::empty(),
-    )
+                    Creating::Subject(s) => {
+                        data.subjects.insert_ord(Subject::new(s.clone()));
+                        ctx.submit_command(controller::SAVE_NOW, None);
+                    }
+                    _ => {}
+                }
+            }
+            data.creating = creating.clone();
+        }
+    }
+    fn finish(ctx: &mut EventCtx) {
+        ctx.submit_command(ADVANCE.with(Creating::Idle(())), None);
+    }
+    fn base<T: Data>(title: &str, content: impl Widget<T> + 'static) -> impl Widget<T> {
+        Flex::column()
+            .with_child(Label::new(title))
+            .with_spacer(5.0)
+            .with_child(content)
+            .padding(5.0)
+            .border(druid::theme::BORDER_LIGHT, 2.0)
+            .rounded(5.0)
+            .padding(10.0)
+    }
+    Creator::new()
+        .idle(SizedBox::empty())
+        .choosing(base(
+            "What to add?",
+            Flex::row()
+                .with_child(Button::new("Action").on_click(|ctx, _, _| {
+                    ctx.submit_command(ADVANCE.with(Creating::Action(String::new())), None)
+                }))
+                .with_spacer(5.0)
+                .with_child(Button::new("Subject").on_click(|ctx, _, _| {
+                    ctx.submit_command(ADVANCE.with(Creating::Subject(String::new())), None)
+                })),
+        ))
+        .action(base(
+            "Add new action:",
+            Flex::row()
+                .with_flex_child(
+                    TextBox::new()
+                        .controller(EnterController::new(|ctx, _| finish(ctx)))
+                        .expand_width(),
+                    1.0,
+                )
+                .with_spacer(3.0)
+                .with_child(Button::new("Add").on_click(|ctx, _, _| finish(ctx))),
+        ))
+        .subject(base(
+            "Add new subject:",
+            Flex::row()
+                .with_flex_child(
+                    TextBox::new()
+                        .controller(EnterController::new(|ctx, _| finish(ctx)))
+                        .expand_width(),
+                    1.0,
+                )
+                .with_spacer(3.0)
+                .with_child(Button::new("Add").on_click(|ctx, _, _| finish(ctx))),
+        ))
+        .lens(AppState::creating)
+        .controller(CommandReceiver::new(handle_advance))
 }
 
 fn buttons() -> impl Widget<AppState> {
     Flex::row()
         .with_flex_child(
-            Button::new("New Topic")
-                .on_click(|_, _data: &mut AppState, _| {
-                    log::error!("Creating new topics is not implemented yet.");
+            Button::dynamic(AppState::new_item_label)
+                .on_click(|_, data: &mut AppState, _| {
+                    data.creating = match data.creating {
+                        Creating::Idle(()) => Creating::Choosing(()),
+                        _ => Creating::Idle(()),
+                    }
                 })
                 .expand_width(),
             1.0,

@@ -1,7 +1,8 @@
 use druid::{
     im::{HashMap, Vector},
-    Data, Lens,
+    Data, Env, Lens,
 };
+use druid_enums::Matcher;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 
@@ -15,7 +16,10 @@ use insights::Insights;
 
 #[derive(Debug, Clone, Default, Data, Lens, Serialize, Deserialize)]
 pub struct AppState {
+    #[serde(skip)]
+    //#[serde(skip_serializing)]
     pub new_name: String,
+
     pub actions: Vector<Action>,
     pub selected_action: Option<Action>,
     pub subjects: Vector<Subject>,
@@ -34,6 +38,15 @@ pub struct AppState {
 impl AppState {
     #[allow(non_upper_case_globals)]
     pub const spent_time: lenses::SpendTime = lenses::SpendTime;
+
+    pub fn new_item_label(&self, _: &Env) -> String {
+        if self.creating == Creating::Idle(()) {
+            "New Item"
+        } else {
+            "Cancel"
+        }
+        .to_string()
+    }
 }
 
 #[derive(Debug, Clone, Data, Lens, Serialize, Deserialize)]
@@ -51,16 +64,18 @@ pub struct Session {
     pub ended: DateTime,
 }
 
-#[derive(Debug, Clone, Data, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Data, Matcher, Serialize, Deserialize, PartialEq, Eq)]
+#[matcher(matcher_name = Creator)]
 pub enum Creating {
-    None,
-    Action,
-    Subject,
+    Idle(()),
+    Choosing(()),
+    Action(String),
+    Subject(String),
 }
 
 impl Default for Creating {
     fn default() -> Self {
-        Creating::None
+        Creating::Idle(())
     }
 }
 
