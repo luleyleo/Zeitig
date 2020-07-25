@@ -40,7 +40,7 @@ impl AppState {
     pub const spent_time: lenses::SpendTime = lenses::SpendTime;
 
     pub fn new_item_label(&self, _: &Env) -> String {
-        if self.creating == Creating::Idle(()) {
+        if self.creating == Creating::Idle {
             "New Item"
         } else {
             "Cancel"
@@ -67,15 +67,15 @@ pub struct Session {
 #[derive(Debug, Clone, Data, Matcher, Serialize, Deserialize, PartialEq, Eq)]
 #[matcher(matcher_name = Creator)]
 pub enum Creating {
-    Idle(()),
-    Choosing(()),
+    Idle,
+    Choosing,
     Action(String),
     Subject(String),
 }
 
 impl Default for Creating {
     fn default() -> Self {
-        Creating::Idle(())
+        Creating::Idle
     }
 }
 

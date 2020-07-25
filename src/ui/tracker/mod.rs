@@ -174,7 +174,7 @@ fn dialogs() -> impl Widget<AppState> {
     const ADVANCE: Selector<Creating> = Selector::new("zeitig.dialogs.advance");
     fn handle_advance(ctx: &mut EventCtx, data: &mut AppState, cmd: &Command) {
         if let Some(creating) = cmd.get(ADVANCE) {
-            if creating == &Creating::Idle(()) {
+            if creating == &Creating::Idle {
                 match &data.creating {
                     Creating::Action(a) => {
                         data.actions.insert_ord(Action::new(a.clone()));
@@ -191,7 +191,7 @@ fn dialogs() -> impl Widget<AppState> {
         }
     }
     fn finish(ctx: &mut EventCtx) {
-        ctx.submit_command(ADVANCE.with(Creating::Idle(())), None);
+        ctx.submit_command(ADVANCE.with(Creating::Idle), None);
     }
     fn base<T: Data>(title: &str, content: impl Widget<T> + 'static) -> impl Widget<T> {
         Flex::column()
@@ -250,8 +250,8 @@ fn buttons() -> impl Widget<AppState> {
             Button::dynamic(AppState::new_item_label)
                 .on_click(|_, data: &mut AppState, _| {
                     data.creating = match data.creating {
-                        Creating::Idle(()) => Creating::Choosing(()),
-                        _ => Creating::Idle(()),
+                        Creating::Idle => Creating::Choosing,
+                        _ => Creating::Idle,
                     }
                 })
                 .expand_width(),
