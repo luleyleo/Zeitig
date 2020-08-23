@@ -4,6 +4,8 @@ use druid_enums::Matcher;
 use im::{HashMap, Vector};
 use std::sync::Arc;
 
+pub mod backend;
+
 #[derive(Clone, Default, Data, Lens)]
 pub struct AppState {
     pub content: Content,
