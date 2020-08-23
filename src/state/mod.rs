@@ -110,7 +110,7 @@ impl AsRef<str> for Action {
 }
 
 #[derive(Debug, Clone, Default, Data, Serialize, Deserialize)]
-pub struct TimeTable(pub HashMap<(Action, Subject), SpentTime>);
+pub struct TimeTable(HashMap<(Action, Subject), SpentTime>);
 
 impl TimeTable {
     pub fn get(&self, action: &Action, subject: &Subject) -> SpentTime {
