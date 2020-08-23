@@ -61,6 +61,12 @@ impl Deref for Date {
     }
 }
 
+impl From<Duration> for SpentTime {
+    fn from(duration: Duration) -> Self {
+        SpentTime(duration)
+    }
+}
+
 impl Default for SpentTime {
     fn default() -> Self {
         SpentTime(Duration::from_secs(0))

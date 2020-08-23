@@ -5,6 +5,8 @@ mod state;
 mod ui;
 mod widgets;
 
+mod state2;
+
 fn main() {
     let window = WindowDesc::new(ui::tracker)
         .title("Zeitig")
