@@ -8,7 +8,7 @@ use druid::{
 use std::time::Duration;
 
 use crate::{
-    controller::{self, AutoSaver, CommandReceiver, EnterController, Ticker},
+    controller::{backend_msg, AutoSaver, BackendController, CommandReceiver, EnterController, Ticker},
     state::{
         Action, ActiveSession, AppState, Content, Creating, Creator, DateTime, Session, Setup,
         SpentTime, Subject, Topic,
@@ -64,6 +64,7 @@ pub fn ui() -> impl Widget<AppState> {
         .with_child(dialogs())
         .with_child(buttons())
         .controller(CommandReceiver::new(handle_command))
+        .controller(BackendController::new())
         .controller(AutoSaver::new())
 }
 
@@ -178,25 +179,28 @@ fn dialogs() -> impl Widget<AppState> {
             if creating == &Creating::Nothing {
                 match &data.setup.creating {
                     Creating::Action(a) => {
-                        // TODO: Create actions properly
-                        data.content.actions.insert_ord(Action {
-                            id: 0,
-                            name: a.clone().into(),
-                        });
-                        ctx.submit_command(controller::SAVE_NOW, None);
+                        ctx.submit_command(backend_msg::ADD_ACTION.with(a.to_owned()), None);
                     }
                     Creating::Subject(s) => {
-                        // TODO: Create subjects properly
-                        data.content.subjects.insert_ord(Subject {
-                            id: 0,
-                            name: s.clone().into(),
-                        });
-                        ctx.submit_command(controller::SAVE_NOW, None);
+                        ctx.submit_command(backend_msg::ADD_SUBJECT.with(s.to_owned()), None);
                     }
                     _ => {}
                 }
             }
             data.setup.creating = creating.clone();
+        }
+    }
+    fn handle_creation(_ctx: &mut EventCtx, data: &mut AppState, cmd: &Command) {
+        match cmd {
+            _ if cmd.is(backend_msg::ACTION_ADDED) => {
+                let action = cmd.get_unchecked(backend_msg::ACTION_ADDED).clone();
+                data.content.actions.insert_ord(action);
+            }
+            _ if cmd.is(backend_msg::SUBJECT_ADDED) => {
+                let subject = cmd.get_unchecked(backend_msg::SUBJECT_ADDED).clone();
+                data.content.subjects.insert_ord(subject);
+            }
+            _ => {}
         }
     }
     fn finish(ctx: &mut EventCtx) {
@@ -251,6 +255,7 @@ fn dialogs() -> impl Widget<AppState> {
         ))
         .lens(AppState::setup.then(Setup::creating))
         .controller(CommandReceiver::new(handle_advance))
+        .controller(CommandReceiver::new(handle_creation))
 }
 
 fn buttons() -> impl Widget<AppState> {
