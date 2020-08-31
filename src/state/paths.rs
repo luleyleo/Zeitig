@@ -1,6 +1,5 @@
-
-use std::path::{Path, PathBuf};
 use directories::ProjectDirs;
+use std::path::{Path, PathBuf};
 
 static FILE_NAME: &str = "zeitig.db";
 

@@ -1,10 +1,10 @@
 use druid::{AppLauncher, WindowDesc};
 use std::error::Error;
 
-mod ui;
-mod state;
-mod widgets;
 mod controller;
+mod state;
+mod ui;
+mod widgets;
 
 fn main() -> Result<(), Box<dyn Error>> {
     let window = WindowDesc::new(ui::tracker)

@@ -7,7 +7,7 @@ pub mod backend;
 pub mod paths;
 pub mod time;
 
-pub use self::time::{DateTime, Date, SpentTime};
+pub use self::time::{Date, DateTime, SpentTime};
 
 #[derive(Clone, Default, Data, Lens)]
 pub struct AppState {
@@ -215,13 +215,16 @@ impl Default for Creating {
 }
 
 mod lenses {
-    use druid::Lens;
     use super::*;
+    use druid::Lens;
 
     pub struct SpendTime;
     impl Lens<AppState, SpentTime> for SpendTime {
         fn with<V, F: FnOnce(&SpentTime) -> V>(&self, data: &AppState, f: F) -> V {
-            if let (Some(action), Some(subject)) = (data.setup.selected_action.clone(), data.setup.selected_subject.clone()) {
+            if let (Some(action), Some(subject)) = (
+                data.setup.selected_action.clone(),
+                data.setup.selected_subject.clone(),
+            ) {
                 f(&data.content.time_table.get(&Topic { action, subject }))
             } else {
                 f(&SpentTime::default())
@@ -229,7 +232,10 @@ mod lenses {
         }
 
         fn with_mut<V, F: FnOnce(&mut SpentTime) -> V>(&self, data: &mut AppState, f: F) -> V {
-            if let (Some(action), Some(subject)) = (data.setup.selected_action.clone(), data.setup.selected_subject.clone()) {
+            if let (Some(action), Some(subject)) = (
+                data.setup.selected_action.clone(),
+                data.setup.selected_subject.clone(),
+            ) {
                 f(data.content.time_table.get_mut(Topic { action, subject }))
             } else {
                 f(&mut SpentTime::default())

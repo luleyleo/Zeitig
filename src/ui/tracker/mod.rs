@@ -3,17 +3,17 @@ use druid::{
         Button, CrossAxisAlignment, Flex, Label, List, MainAxisAlignment, Painter, Scroll,
         SizedBox, TextBox,
     },
-    Command, Data, EventCtx, Selector, UnitPoint, Widget, WidgetExt, LensExt,
+    Command, Data, EventCtx, LensExt, Selector, UnitPoint, Widget, WidgetExt,
 };
 use std::time::Duration;
 
 use crate::{
     controller::{self, AutoSaver, CommandReceiver, EnterController, Ticker},
     state::{
-        Action, ActiveSession, AppState, Creating, DateTime, Session,
-        SpentTime, Subject, Topic, Setup, Content, Creator,
+        Action, ActiveSession, AppState, Content, Creating, Creator, DateTime, Session, Setup,
+        SpentTime, Subject, Topic,
     },
-    widgets::{Maybe},
+    widgets::Maybe,
 };
 
 const SELECT_ACTION: Selector<Action> = Selector::new("zeitig.select_action");
@@ -178,11 +178,17 @@ fn dialogs() -> impl Widget<AppState> {
             if creating == &Creating::Nothing {
                 match &data.setup.creating {
                     Creating::Action(a) => {
-                        data.content.actions.insert_ord(Action { id: 0, name: a.clone().into()});
+                        data.content.actions.insert_ord(Action {
+                            id: 0,
+                            name: a.clone().into(),
+                        });
                         ctx.submit_command(controller::SAVE_NOW, None);
                     }
                     Creating::Subject(s) => {
-                        data.content.subjects.insert_ord(Subject { id: 0, name: s.clone().into()});
+                        data.content.subjects.insert_ord(Subject {
+                            id: 0,
+                            name: s.clone().into(),
+                        });
                         ctx.submit_command(controller::SAVE_NOW, None);
                     }
                     _ => {}
