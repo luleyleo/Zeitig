@@ -19,7 +19,23 @@ pub struct AppState {
 
 #[allow(non_upper_case_globals)]
 impl AppState {
-    pub const spent_time: lenses::SpendTime = lenses::SpendTime;
+    pub fn session_duration(&self) -> SpentTime {
+        match (
+            self.setup.selected_action.clone(),
+            self.setup.selected_subject.clone(),
+            self.active.as_ref(),
+        ) {
+            (Some(action), Some(subject), Some(session)) => {
+                let past = self.content.time_table.get(&Topic { action, subject });
+                let current = session.duration;
+                past + current
+            }
+            (Some(action), Some(subject), None) => {
+                self.content.time_table.get(&Topic { action, subject })
+            }
+            _ => SpentTime::default(),
+        }
+    }
 }
 
 #[derive(Clone, Data, Lens, PartialEq, Eq, Hash)]
@@ -211,35 +227,5 @@ pub enum Creating {
 impl Default for Creating {
     fn default() -> Self {
         Creating::Nothing
-    }
-}
-
-mod lenses {
-    use super::*;
-    use druid::Lens;
-
-    pub struct SpendTime;
-    impl Lens<AppState, SpentTime> for SpendTime {
-        fn with<V, F: FnOnce(&SpentTime) -> V>(&self, data: &AppState, f: F) -> V {
-            if let (Some(action), Some(subject)) = (
-                data.setup.selected_action.clone(),
-                data.setup.selected_subject.clone(),
-            ) {
-                f(&data.content.time_table.get(&Topic { action, subject }))
-            } else {
-                f(&SpentTime::default())
-            }
-        }
-
-        fn with_mut<V, F: FnOnce(&mut SpentTime) -> V>(&self, data: &mut AppState, f: F) -> V {
-            if let (Some(action), Some(subject)) = (
-                data.setup.selected_action.clone(),
-                data.setup.selected_subject.clone(),
-            ) {
-                f(data.content.time_table.get_mut(Topic { action, subject }))
-            } else {
-                f(&mut SpentTime::default())
-            }
-        }
     }
 }

@@ -8,7 +8,9 @@ use druid::{
 use std::time::Duration;
 
 use crate::{
-    controller::{backend_msg, AutoSaver, BackendController, CommandReceiver, EnterController, Ticker},
+    controller::{
+        backend_msg, AutoSaver, BackendController, CommandReceiver, EnterController, Ticker,
+    },
     state::{
         Action, ActiveSession, AppState, Content, Creating, Creator, DateTime, Session, Setup,
         SpentTime, Subject, Topic,
@@ -107,10 +109,9 @@ fn header() -> impl Widget<AppState> {
                     Flex::column()
                         .cross_axis_alignment(CrossAxisAlignment::Start)
                         .with_child(session_duration_label().lens(AppState::active))
-                        .with_child(
-                            Label::dynamic(|time, _| format!("Total: {}", time))
-                                .lens(AppState::spent_time),
-                        )
+                        .with_child(Label::dynamic(|data: &AppState, _| {
+                            format!("Total: {}", data.session_duration())
+                        }))
                         .expand_width(),
                     1.0,
                 )

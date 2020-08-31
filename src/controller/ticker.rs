@@ -1,10 +1,7 @@
 use druid::{widget::Controller, Env, Event, EventCtx, TimerToken, Widget};
 use std::time::Duration;
 
-use crate::{
-    controller::SAVE_NOW,
-    state::{AppState, Topic},
-};
+use crate::{controller::SAVE_NOW, state::AppState};
 
 const INTERVAL: Duration = Duration::from_secs(1);
 
@@ -29,12 +26,7 @@ impl<W: Widget<AppState>> Controller<AppState, W> for Ticker {
     ) {
         if let Event::Timer(token) = event {
             if Some(*token) == self.timer {
-                if let (Some(action), Some(subject), Some(session)) = (
-                    data.setup.selected_action.clone(),
-                    data.setup.selected_subject.clone(),
-                    data.active.as_mut(),
-                ) {
-                    **data.content.time_table.get_mut(Topic { action, subject }) += INTERVAL;
+                if let Some(session) = data.active.as_mut() {
                     *session.duration += INTERVAL;
                     self.timer = Some(ctx.request_timer(INTERVAL));
                 }
