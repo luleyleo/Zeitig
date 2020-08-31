@@ -9,7 +9,7 @@ use std::time::Duration;
 
 use crate::{
     controller::{self, AutoSaver, CommandReceiver, EnterController, Ticker},
-    state2::{
+    state::{
         Action, ActiveSession, AppState, Creating, DateTime, Session,
         SpentTime, Subject, Topic, Setup, Content, Creator,
     },

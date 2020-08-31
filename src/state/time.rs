@@ -35,12 +35,6 @@ impl From<time::OffsetDateTime> for DateTime {
     }
 }
 
-impl Date {
-    pub fn inner(&self) -> &time::Date {
-        &self.0
-    }
-}
-
 impl From<time::Date> for Date {
     fn from(date: time::Date) -> Self {
         Date(date)

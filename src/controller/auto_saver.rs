@@ -1,7 +1,7 @@
 use druid::{widget::Controller, Env, Event, EventCtx, Selector, TimerToken, Widget};
 use std::time::Duration;
 
-use crate::state2::AppState;
+use crate::state::AppState;
 
 pub const SAVE_NOW: Selector = Selector::new("zeitig.save");
 

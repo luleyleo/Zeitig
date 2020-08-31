@@ -1,8 +1,5 @@
 use super::{Action, Backend, Content, History, Session, Subject};
-use crate::{
-    state::{DateTime, SpentTime},
-    state2::Topic,
-};
+use crate::state::{DateTime, SpentTime, Topic};
 use rusqlite::{params, Connection, NO_PARAMS};
 use std::{error::Error, path::Path, time::Duration};
 
