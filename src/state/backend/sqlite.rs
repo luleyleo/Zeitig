@@ -143,7 +143,7 @@ impl Backend for Sqlite {
             while let Some(row) = rows.next()? {
                 let id = row.get::<_, u32>("id")? as usize;
                 let name = row.get("name")?;
-                content.actions.push_back(Action { id, name });
+                content.actions.insert_ord(Action { id, name });
             }
         }
 
@@ -155,7 +155,7 @@ impl Backend for Sqlite {
             while let Some(row) = rows.next()? {
                 let id = row.get::<_, u32>("id")? as usize;
                 let name = row.get("name")?;
-                content.subjects.push_back(Subject { id, name });
+                content.subjects.insert_ord(Subject { id, name });
             }
         }
 
