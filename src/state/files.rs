@@ -3,6 +3,8 @@ use std::path::{Path, PathBuf};
 
 use crate::state::AppState;
 
+// TODO: Consider removing those
+#[allow(dead_code)]
 pub fn read_state() -> AppState {
     let path = data_file_path();
     if path.exists() {
@@ -13,21 +15,23 @@ pub fn read_state() -> AppState {
     }
 }
 
+// TODO: Consider removing those
+#[allow(dead_code)]
 pub fn write_state(state: AppState) {
     let path = data_file_path();
     let data = rmp_serde::to_vec(&state).expect("Failed to serialize data.");
     std::fs::write(path, &data).expect("Failed to write data.");
 }
 
-fn data_file_path() -> PathBuf {
+pub fn data_file_path() -> PathBuf {
     if cfg!(debug_assertions) {
         log::info!("Accessing debug data file.");
-        return PathBuf::from("./zeitig.mp");
+        return PathBuf::from("./zeitig.db");
     }
     if let Some(pd) = ProjectDirs::from("", "", "Zeitig") {
         let data = pd.data_dir();
         if std::fs::create_dir_all(data).is_ok() {
-            return data.join("zeitig.mp");
+            return data.join("zeitig.db");
         }
     }
     Path::new("zeitig.mp").to_owned()

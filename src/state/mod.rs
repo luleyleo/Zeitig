@@ -1,3 +1,6 @@
+// TODO: Remove this module
+#![allow(dead_code)]
+
 use druid::{
     im::{HashMap, Vector},
     Data, Env, Lens,

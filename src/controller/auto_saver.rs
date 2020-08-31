@@ -1,7 +1,7 @@
 use druid::{widget::Controller, Env, Event, EventCtx, Selector, TimerToken, Widget};
 use std::time::Duration;
 
-use crate::state::{self, AppState};
+use crate::state2::AppState;
 
 pub const SAVE_NOW: Selector = Selector::new("zeitig.save");
 
@@ -14,9 +14,10 @@ impl AutoSaver {
         Self { timer: None }
     }
 
-    fn save(&mut self, data: &mut AppState) {
+    fn save(&mut self, _data: &mut AppState) {
         self.timer = None;
-        state::files::write_state(data.clone());
+        // TODO: actually save the data
+        //state::files::write_state(data.clone());
     }
 }
 

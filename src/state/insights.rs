@@ -1,7 +1,7 @@
 use druid::{Data, Lens};
 use im::Vector;
 
-use super::{Action, AppState, Date, SpentTime, Subject};
+use crate::state::{Action, AppState, Date, SpentTime, Subject};
 use std::collections::HashMap;
 
 #[derive(Debug, Clone, Default, Data, Lens)]
@@ -10,6 +10,8 @@ pub struct Insights {
 }
 
 impl Insights {
+    // TODO: Bring back insights
+    #[allow(dead_code)]
     pub fn generate(data: &AppState) -> Self {
         let mut this = Insights::default();
         let mut entries: HashMap<Topic, SpentTime> = HashMap::new();

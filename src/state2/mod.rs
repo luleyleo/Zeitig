@@ -1,4 +1,3 @@
-use crate::state::{DateTime, SpentTime};
 use druid::{Data, Lens};
 use druid_enums::Matcher;
 use im::{HashMap, Vector};
@@ -6,12 +5,19 @@ use std::sync::Arc;
 
 pub mod backend;
 
+pub use crate::state::{DateTime, Date, SpentTime};
+
 #[derive(Clone, Default, Data, Lens)]
 pub struct AppState {
     pub content: Content,
     pub history: History,
     pub setup: Setup,
     pub active: Option<ActiveSession>,
+}
+
+#[allow(non_upper_case_globals)]
+impl AppState {
+    pub const spent_time: lenses::SpendTime = lenses::SpendTime;
 }
 
 #[derive(Clone, Data, Lens, PartialEq, Eq, Hash)]
@@ -24,6 +30,18 @@ pub struct Topic {
 pub struct Action {
     pub id: usize,
     pub name: Arc<str>,
+}
+
+impl PartialOrd for Action {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.name.cmp(&other.name))
+    }
+}
+
+impl Ord for Action {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.name.cmp(&other.name)
+    }
 }
 
 impl AsRef<str> for Action {
@@ -42,6 +60,18 @@ impl PartialEq for Action {
 pub struct Subject {
     pub id: usize,
     pub name: Arc<str>,
+}
+
+impl PartialOrd for Subject {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.name.cmp(&other.name))
+    }
+}
+
+impl Ord for Subject {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.name.cmp(&other.name)
+    }
 }
 
 impl AsRef<str> for Subject {
@@ -145,9 +175,20 @@ pub struct Session {
 
 #[derive(Clone, Default, Data, Lens)]
 pub struct Setup {
-    selected_action: Option<Action>,
-    selected_subject: Option<Subject>,
-    creating: Creating,
+    pub selected_action: Option<Action>,
+    pub selected_subject: Option<Subject>,
+    pub creating: Creating,
+}
+
+impl Setup {
+    pub fn new_item_label(&self, _: &druid::Env) -> String {
+        if self.creating == Creating::Nothing {
+            "New Item"
+        } else {
+            "Cancel"
+        }
+        .to_string()
+    }
 }
 
 #[derive(Clone, Data, Lens)]
@@ -161,12 +202,36 @@ pub struct ActiveSession {
 pub enum Creating {
     Nothing,
     Choosing,
-    Action(Arc<String>),
-    Subject(Arc<String>),
+    Action(String),
+    Subject(String),
 }
 
 impl Default for Creating {
     fn default() -> Self {
         Creating::Nothing
+    }
+}
+
+mod lenses {
+    use druid::Lens;
+    use super::*;
+
+    pub struct SpendTime;
+    impl Lens<AppState, SpentTime> for SpendTime {
+        fn with<V, F: FnOnce(&SpentTime) -> V>(&self, data: &AppState, f: F) -> V {
+            if let (Some(action), Some(subject)) = (data.setup.selected_action.clone(), data.setup.selected_subject.clone()) {
+                f(&data.content.time_table.get(&Topic { action, subject }))
+            } else {
+                f(&SpentTime::default())
+            }
+        }
+
+        fn with_mut<V, F: FnOnce(&mut SpentTime) -> V>(&self, data: &mut AppState, f: F) -> V {
+            if let (Some(action), Some(subject)) = (data.setup.selected_action.clone(), data.setup.selected_subject.clone()) {
+                f(data.content.time_table.get_mut(Topic { action, subject }))
+            } else {
+                f(&mut SpentTime::default())
+            }
+        }
     }
 }
