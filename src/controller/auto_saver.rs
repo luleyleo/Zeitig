@@ -17,6 +17,7 @@ impl AutoSaver {
     fn save(&mut self, _data: &mut AppState) {
         self.timer = None;
         // TODO: actually save the data
+        // This will have to save the currently running session I guess.
         //state::files::write_state(data.clone());
     }
 }

@@ -178,6 +178,7 @@ fn dialogs() -> impl Widget<AppState> {
             if creating == &Creating::Nothing {
                 match &data.setup.creating {
                     Creating::Action(a) => {
+                        // TODO: Create actions properly
                         data.content.actions.insert_ord(Action {
                             id: 0,
                             name: a.clone().into(),
@@ -185,6 +186,7 @@ fn dialogs() -> impl Widget<AppState> {
                         ctx.submit_command(controller::SAVE_NOW, None);
                     }
                     Creating::Subject(s) => {
+                        // TODO: Create subjects properly
                         data.content.subjects.insert_ord(Subject {
                             id: 0,
                             name: s.clone().into(),
