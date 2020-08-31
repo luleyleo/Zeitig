@@ -16,4 +16,5 @@ druid-enums = { git = "https://github.com/finnerale/druid-enums" }
 
 [dependencies.druid]
 version = "0.6"
+git = "https://github.com/linebender/druid"
 features = ["im"]
