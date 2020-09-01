@@ -28,30 +28,33 @@ fn start_new_session(data: &mut AppState) {
     })
 }
 
-fn end_session(data: &mut AppState) {
+fn end_session(ctx: &mut EventCtx, data: &mut AppState) {
     if data.active.is_some() {
         let active = data.active.take().unwrap();
         if *active.duration > Duration::from_secs(30) {
+            let topic = Topic {
+                action: data.setup.selected_action.clone().unwrap(),
+                subject: data.setup.selected_subject.clone().unwrap(),
+            };
+            *data.content.time_table.get_mut(topic.clone()) += active.duration;
             let session = Session {
-                topic: Topic {
-                    action: data.setup.selected_action.clone().unwrap(),
-                    subject: data.setup.selected_subject.clone().unwrap(),
-                },
+                topic,
                 started: active.started,
                 ended: DateTime::now(),
             };
-            data.history.add(session);
+            data.history.add(session.clone());
+            ctx.submit_command(backend_msg::ADD_SESSION.with(session), None);
         }
     }
 }
 
-fn handle_command(_ctx: &mut EventCtx, data: &mut AppState, cmd: &Command) {
+fn handle_command(ctx: &mut EventCtx, data: &mut AppState, cmd: &Command) {
     if let Some(action) = cmd.get(SELECT_ACTION) {
-        end_session(data);
+        end_session(ctx, data);
         data.setup.selected_action = Some(action.clone());
     }
     if let Some(subject) = cmd.get(SELECT_SUBJECT) {
-        end_session(data);
+        end_session(ctx, data);
         data.setup.selected_subject = Some(subject.clone());
     }
 }
@@ -110,20 +113,22 @@ fn header() -> impl Widget<AppState> {
                         .cross_axis_alignment(CrossAxisAlignment::Start)
                         .with_child(session_duration_label().lens(AppState::active))
                         .with_child(Label::dynamic(|data: &AppState, _| {
-                            format!("Total: {}", data.session_duration())
+                            format!("Total: {}", data.current_session_duration())
                         }))
                         .expand_width(),
                     1.0,
                 )
                 .with_spacer(5.0)
                 .with_child(
-                    Button::new(|data: &AppState, _: &_| match data.active {
+                    Button::dynamic(|data: &AppState, _| match data.active {
                         None => "Start".to_string(),
                         Some(_) => "Stop".to_string(),
                     })
-                    .on_click(|_, data: &mut AppState, _| match data.active {
-                        Some(_) => end_session(data),
-                        None => start_new_session(data),
+                    .on_click(|ctx, data: &mut AppState, _| {
+                        match data.active {
+                            Some(_) => end_session(ctx, data),
+                            None => start_new_session(data),
+                        }
                     }),
                 )
                 .padding((10.0, 10.0, 10.0, 5.0))

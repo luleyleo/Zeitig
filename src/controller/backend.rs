@@ -1,6 +1,6 @@
 use crate::state::{
     backend::{Backend, Sqlite},
-    paths, AppState,
+    paths, AppState, Session, SpentTime,
 };
 use druid::{
     widget::Controller, Env, Event, EventCtx, ExtEventSink, LifeCycle, LifeCycleCtx, Widget,
@@ -14,6 +14,7 @@ use std::{
 enum BackendCommand {
     AddAction(String),
     AddSubject(String),
+    AddSession(Session, SpentTime),
     Stop,
 }
 
@@ -24,11 +25,12 @@ enum Continue {
 }
 
 pub mod msg {
-    use crate::state::{Action, Subject};
+    use crate::state::{Action, Session, Subject};
     use druid::Selector;
 
     pub const ADD_ACTION: Selector<String> = Selector::new("zeitig.backend.add-action");
     pub const ADD_SUBJECT: Selector<String> = Selector::new("zeitig.backend.add-subject");
+    pub const ADD_SESSION: Selector<Session> = Selector::new("zeitig.backend.add-session");
 
     pub const ACTION_ADDED: Selector<Action> = Selector::new("zeitig.backend.action-added");
     pub const SUBJECT_ADDED: Selector<Subject> = Selector::new("zeitig.backend.subject-added");
@@ -98,6 +100,10 @@ impl BackendController {
                 let subject = backend.create_subject(&name)?;
                 sink.submit_command(msg::SUBJECT_ADDED, subject, None)?;
             }
+            BackendCommand::AddSession(session, total_duration) => {
+                backend.add_session(&session)?;
+                backend.update_time(&session.topic, &total_duration)?;
+            }
             BackendCommand::Stop => return Ok(Continue::No),
         }
         Ok(Continue::Yes)
@@ -113,29 +119,24 @@ impl<W: Widget<AppState>> Controller<AppState, W> for BackendController {
         data: &mut AppState,
         env: &Env,
     ) {
+        let sender = self.sender.as_ref().unwrap();
         match event {
             Event::Command(cmd) if cmd.is(msg::ADD_ACTION) => {
                 let name = cmd.get_unchecked(msg::ADD_ACTION).to_owned();
-                self.sender
-                    .as_mut()
-                    .unwrap()
-                    .send(BackendCommand::AddAction(name))
-                    .unwrap();
+                sender.send(BackendCommand::AddAction(name)).unwrap();
             }
             Event::Command(cmd) if cmd.is(msg::ADD_SUBJECT) => {
                 let name = cmd.get_unchecked(msg::ADD_SUBJECT).to_owned();
-                self.sender
-                    .as_mut()
-                    .unwrap()
-                    .send(BackendCommand::AddSubject(name))
-                    .unwrap();
+                sender.send(BackendCommand::AddSubject(name)).unwrap();
+            }
+            Event::Command(cmd) if cmd.is(msg::ADD_SESSION) => {
+                let session = cmd.get_unchecked(msg::ADD_SESSION).to_owned();
+                let past_duration = data.content.time_table.get(&session.topic);
+                let total_duration = past_duration + session.duration();
+                sender.send(BackendCommand::AddSession(session, total_duration)).unwrap();
             }
             Event::Command(cmd) if cmd.is(druid::commands::CLOSE_WINDOW) => {
-                self.sender
-                    .as_mut()
-                    .unwrap()
-                    .send(BackendCommand::Stop)
-                    .unwrap();
+                sender.send(BackendCommand::Stop).unwrap();
             }
             _ => child.event(ctx, event, data, env),
         }

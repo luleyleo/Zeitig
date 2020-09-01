@@ -19,7 +19,7 @@ pub struct AppState {
 
 #[allow(non_upper_case_globals)]
 impl AppState {
-    pub fn session_duration(&self) -> SpentTime {
+    pub fn current_session_duration(&self) -> SpentTime {
         match (
             self.setup.selected_action.clone(),
             self.setup.selected_subject.clone(),
@@ -189,6 +189,13 @@ pub struct Session {
     pub topic: Topic,
     pub started: DateTime,
     pub ended: DateTime,
+}
+
+impl Session {
+    pub fn duration(&self) -> SpentTime {
+        use std::convert::TryFrom;
+        SpentTime::from(std::time::Duration::try_from(*self.ended - *self.started).unwrap())
+    }
 }
 
 #[derive(Clone, Default, Data, Lens)]
