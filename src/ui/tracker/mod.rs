@@ -9,7 +9,8 @@ use std::time::Duration;
 
 use crate::{
     controller::{
-        backend_msg, AutoSaver, BackendController, CommandReceiver, EnterController, Ticker,
+        backend_msg, AutoSaver, BackendController, CloseController, CommandReceiver,
+        EnterController, Ticker,
     },
     state::{
         Action, ActiveSession, AppState, Content, Creating, Creator, DateTime, Session, Setup,
@@ -28,7 +29,7 @@ fn start_new_session(data: &mut AppState) {
     })
 }
 
-fn end_session(ctx: &mut EventCtx, data: &mut AppState) {
+pub fn end_session(ctx: &mut EventCtx, data: &mut AppState) {
     if data.active.is_some() {
         let active = data.active.take().unwrap();
         if *active.duration > Duration::from_secs(30) {
@@ -71,6 +72,7 @@ pub fn ui() -> impl Widget<AppState> {
         .controller(CommandReceiver::new(handle_command))
         .controller(BackendController::new())
         .controller(AutoSaver::new())
+        .controller(CloseController::new())
 }
 
 fn selected_action_label() -> impl Widget<Option<Action>> {

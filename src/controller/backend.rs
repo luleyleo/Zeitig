@@ -28,6 +28,8 @@ pub mod msg {
     use crate::state::{Action, Session, Subject};
     use druid::Selector;
 
+    pub const STOP: Selector = Selector::new("zeitig.backend.stop");
+
     pub const ADD_ACTION: Selector<String> = Selector::new("zeitig.backend.add-action");
     pub const ADD_SUBJECT: Selector<String> = Selector::new("zeitig.backend.add-subject");
     pub const ADD_SESSION: Selector<Session> = Selector::new("zeitig.backend.add-session");
@@ -133,9 +135,11 @@ impl<W: Widget<AppState>> Controller<AppState, W> for BackendController {
                 let session = cmd.get_unchecked(msg::ADD_SESSION).to_owned();
                 let past_duration = data.content.time_table.get(&session.topic);
                 let total_duration = past_duration + session.duration();
-                sender.send(BackendCommand::AddSession(session, total_duration)).unwrap();
+                sender
+                    .send(BackendCommand::AddSession(session, total_duration))
+                    .unwrap();
             }
-            Event::Command(cmd) if cmd.is(druid::commands::CLOSE_WINDOW) => {
+            Event::Command(cmd) if cmd.is(msg::STOP) => {
                 sender.send(BackendCommand::Stop).unwrap();
             }
             _ => child.event(ctx, event, data, env),

@@ -1,4 +1,4 @@
-mod tracker;
+pub mod tracker;
 pub use tracker::ui as tracker;
 
 //mod insights;
