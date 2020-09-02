@@ -32,7 +32,8 @@ impl<T: Data> Maybe<T> {
 impl<T: Data> Widget<Option<T>> for Maybe<T> {
     fn event(&mut self, ctx: &mut EventCtx, event: &Event, data: &mut Option<T>, env: &Env) {
         match data {
-            Some(data) => self.some.event(ctx, event, data, env),
+            Some(data) if self.some.is_initialized() => self.some.event(ctx, event, data, env),
+            Some(_) => (),
             None => self.none.event(ctx, event, &mut (), env),
         }
     }
@@ -44,10 +45,17 @@ impl<T: Data> Widget<Option<T>> for Maybe<T> {
         data: &Option<T>,
         env: &Env,
     ) {
-        match data {
-            Some(data) => self.some.lifecycle(ctx, event, data, env),
-            None => self.none.lifecycle(ctx, event, &(), env),
-        };
+        if let LifeCycle::WidgetAdded = event {
+            if let Some(data) = data {
+                self.some.lifecycle(ctx, event, data, env);
+            }
+            self.none.lifecycle(ctx, event, &(), env);
+        } else {
+            match data {
+                Some(data) => self.some.lifecycle(ctx, event, data, env),
+                None => self.none.lifecycle(ctx, event, &(), env),
+            };
+        }
     }
 
     fn update(&mut self, ctx: &mut UpdateCtx, old_data: &Option<T>, data: &Option<T>, env: &Env) {
