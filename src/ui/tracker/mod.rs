@@ -1,12 +1,3 @@
-use druid::{
-    widget::{
-        Button, CrossAxisAlignment, Flex, Label, List, MainAxisAlignment, Painter, Scroll,
-        SizedBox, TextBox,
-    },
-    Command, Data, EventCtx, LensExt, Selector, UnitPoint, Widget, WidgetExt,
-};
-use std::time::Duration;
-
 use crate::{
     controller::{
         backend_msg, AutoSaver, BackendController, CloseController, CommandReceiver,
@@ -18,6 +9,14 @@ use crate::{
     },
     widgets::Maybe,
 };
+use druid::{
+    widget::{
+        Button, CrossAxisAlignment, Flex, Label, List, MainAxisAlignment, Painter, Scroll,
+        SizedBox, TextBox,
+    },
+    Command, Data, EventCtx, LensExt, Selector, UnitPoint, Widget, WidgetExt,
+};
+use std::time::Duration;
 
 const SELECT_ACTION: Selector<Action> = Selector::new("zeitig.select_action");
 const SELECT_SUBJECT: Selector<Subject> = Selector::new("zeitig.select_subject");
