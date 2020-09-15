@@ -4,6 +4,9 @@ version = "0.1.0"
 authors = ["Leopold Luley <git@leopoldluley.de>"]
 edition = "2018"
 
+[profile.release]
+lto = "fat"
+
 [dependencies]
 log = "0.4.8"
 rmp-serde = "0.14.3"
