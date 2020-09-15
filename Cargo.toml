@@ -11,10 +11,9 @@ lto = "fat"
 log = "0.4.8"
 rmp-serde = "0.14.3"
 directories = "2.0.2"
-im = { version = "15.0.0", features = ["serde"] }
-time = { version = "0.2.15", features = ["serde"] }
+im = "15.0.0"
+time = "0.2.15"
 rusqlite = { version = "0.24.0", features = ["time"] }
-serde = { version = "1.0.106", features = ["derive", "rc"] }
 druid-enums = { git = "https://github.com/finnerale/druid-enums" }
 
 [dependencies.druid]

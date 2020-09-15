@@ -793,7 +793,6 @@ dependencies = [
  "bitmaps",
  "rand_core",
  "rand_xoshiro",
- "serde",
  "sized-chunks",
  "typenum",
  "version_check",
@@ -1304,9 +1303,6 @@ name = "serde"
 version = "1.0.115"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e54c9a88f2da7238af84b5101443f0c0d0a3bbdc455e34a5c9497b1903ed55d5"
-dependencies = [
- "serde_derive",
-]
 
 [[package]]
 name = "serde_derive"
@@ -1505,7 +1501,6 @@ checksum = "3a51cadc5b1eec673a685ff7c33192ff7b7603d0b75446fb354939ee615acb15"
 dependencies = [
  "cfg-if",
  "libc",
- "serde",
  "standback",
  "stdweb",
  "time-macros",
@@ -1789,6 +1784,5 @@ dependencies = [
  "log",
  "rmp-serde",
  "rusqlite",
- "serde",
  "time",
 ]

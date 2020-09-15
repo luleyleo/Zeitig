@@ -1,18 +1,17 @@
 use druid::Data;
-use serde::{Deserialize, Serialize};
 use std::{
     fmt::Display,
     ops::{Add, AddAssign, Deref, DerefMut},
     time::Duration,
 };
 
-#[derive(Debug, Clone, Copy, Data, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Data)]
 pub struct DateTime(#[data(same_fn = "PartialEq::eq")] time::OffsetDateTime);
 
-#[derive(Debug, Clone, Copy, Data, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Data)]
 pub struct Date(#[data(same_fn = "PartialEq::eq")] time::Date);
 
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy)]
 pub struct SpentTime(Duration);
 
 impl DateTime {
