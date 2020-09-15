@@ -6,6 +6,7 @@ use druid::{
 /// A widget that switches between two possible child views, for `Data` that
 /// is `Option<T>`.
 pub struct Maybe<T> {
+    some_initialized: bool,
     some: WidgetPod<T, Box<dyn Widget<T>>>,
     none: WidgetPod<(), Box<dyn Widget<()>>>,
 }
@@ -14,6 +15,7 @@ impl<T: Data> Maybe<T> {
     /// Create a new `Maybe` widget with a `Some` and a `None` branch.
     pub fn new(some: impl Widget<T> + 'static, none: impl Widget<()> + 'static) -> Maybe<T> {
         Maybe {
+            some_initialized: false,
             some: WidgetPod::new(Box::new(some)),
             none: WidgetPod::new(Box::new(none)),
         }
@@ -23,6 +25,7 @@ impl<T: Data> Maybe<T> {
     #[allow(dead_code)]
     pub fn or_empty(some: impl Widget<T> + 'static) -> Maybe<T> {
         Maybe {
+            some_initialized: false,
             some: WidgetPod::new(Box::new(some)),
             none: WidgetPod::new(Box::new(SizedBox::empty())),
         }
@@ -32,7 +35,7 @@ impl<T: Data> Maybe<T> {
 impl<T: Data> Widget<Option<T>> for Maybe<T> {
     fn event(&mut self, ctx: &mut EventCtx, event: &Event, data: &mut Option<T>, env: &Env) {
         match data {
-            Some(data) if self.some.is_initialized() => self.some.event(ctx, event, data, env),
+            Some(data) if self.some_initialized => self.some.event(ctx, event, data, env),
             Some(_) => (),
             None => self.none.event(ctx, event, &mut (), env),
         }
@@ -48,6 +51,7 @@ impl<T: Data> Widget<Option<T>> for Maybe<T> {
         if let LifeCycle::WidgetAdded = event {
             if let Some(data) = data {
                 self.some.lifecycle(ctx, event, data, env);
+                self.some_initialized = true;
             }
             self.none.lifecycle(ctx, event, &(), env);
         } else {
