@@ -3,7 +3,7 @@ use crate::state::{
     paths, AppState, Session, SpentTime,
 };
 use druid::{
-    widget::Controller, Env, Event, EventCtx, ExtEventSink, LifeCycle, LifeCycleCtx, Widget,
+    widget::Controller, Env, Event, EventCtx, ExtEventSink, LifeCycle, LifeCycleCtx, Target, Widget,
 };
 use std::{
     error::Error,
@@ -69,7 +69,10 @@ impl BackendController {
                     Err(err) => {
                         log::error!("{}", err);
                         let message = err.to_string();
-                        if sink.submit_command(msg::ERROR, message, None).is_err() {
+                        if sink
+                            .submit_command(msg::ERROR, message, Target::Auto)
+                            .is_err()
+                        {
                             log::error!(
                                 "Backend event sink has been closed while the backend is still running."
                             );
@@ -78,7 +81,7 @@ impl BackendController {
                     }
                 }
             }
-            if sink.submit_command(msg::STOPPED, (), None).is_err() {
+            if sink.submit_command(msg::STOPPED, (), Target::Auto).is_err() {
                 log::info!(
                     "Backend event sink has been closed before emitting the stopped command."
                 );
@@ -96,11 +99,11 @@ impl BackendController {
         match cmd {
             BackendCommand::AddAction(name) => {
                 let action = backend.create_action(&name)?;
-                sink.submit_command(msg::ACTION_ADDED, action, None)?;
+                sink.submit_command(msg::ACTION_ADDED, action, Target::Auto)?;
             }
             BackendCommand::AddSubject(name) => {
                 let subject = backend.create_subject(&name)?;
-                sink.submit_command(msg::SUBJECT_ADDED, subject, None)?;
+                sink.submit_command(msg::SUBJECT_ADDED, subject, Target::Auto)?;
             }
             BackendCommand::AddSession(session, total_duration) => {
                 backend.add_session(&session)?;

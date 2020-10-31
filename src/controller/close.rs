@@ -30,7 +30,7 @@ impl<W: Widget<AppState>> Controller<AppState, W> for CloseController {
                     if data.active.is_some() {
                         tracker::end_session(ctx, data);
                     }
-                    ctx.submit_command(backend_msg::STOP, None);
+                    ctx.submit_command(backend_msg::STOP);
                 }
             }
             Event::Command(cmd) if cmd.is(backend_msg::STOPPED) => {

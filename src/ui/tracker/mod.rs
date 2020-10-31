@@ -43,7 +43,7 @@ pub fn end_session(ctx: &mut EventCtx, data: &mut AppState) {
                 ended: DateTime::now(),
             };
             data.history.add(session.clone());
-            ctx.submit_command(backend_msg::ADD_SESSION.with(session), None);
+            ctx.submit_command(backend_msg::ADD_SESSION.with(session));
         }
     }
 }
@@ -153,7 +153,7 @@ fn lists() -> impl Widget<AppState> {
                 Label::dynamic(|action: &Action, _| action.as_ref().to_string())
                     .padding(3.0)
                     .on_click(|ctx, action: &mut Action, _| {
-                        ctx.submit_command(SELECT_ACTION.with(action.clone()), None);
+                        ctx.submit_command(SELECT_ACTION.with(action.clone()));
                     })
                     .align_horizontal(UnitPoint::CENTER)
             }))
@@ -167,7 +167,7 @@ fn lists() -> impl Widget<AppState> {
                 Label::dynamic(|subject: &Subject, _| subject.as_ref().to_string())
                     .padding(3.0)
                     .on_click(|ctx, subject: &mut Subject, _| {
-                        ctx.submit_command(SELECT_SUBJECT.with(subject.clone()), None);
+                        ctx.submit_command(SELECT_SUBJECT.with(subject.clone()));
                     })
                     .align_horizontal(UnitPoint::CENTER)
             }))
@@ -186,10 +186,10 @@ fn dialogs() -> impl Widget<AppState> {
             if creating == &Creating::Nothing {
                 match &data.setup.creating {
                     Creating::Action(a) => {
-                        ctx.submit_command(backend_msg::ADD_ACTION.with(a.to_owned()), None);
+                        ctx.submit_command(backend_msg::ADD_ACTION.with(a.to_owned()));
                     }
                     Creating::Subject(s) => {
-                        ctx.submit_command(backend_msg::ADD_SUBJECT.with(s.to_owned()), None);
+                        ctx.submit_command(backend_msg::ADD_SUBJECT.with(s.to_owned()));
                     }
                     _ => {}
                 }
@@ -211,7 +211,7 @@ fn dialogs() -> impl Widget<AppState> {
         }
     }
     fn finish(ctx: &mut EventCtx) {
-        ctx.submit_command(ADVANCE.with(Creating::Nothing), None);
+        ctx.submit_command(ADVANCE.with(Creating::Nothing));
     }
     fn base<T: Data>(title: &str, content: impl Widget<T> + 'static) -> impl Widget<T> {
         Flex::column()
@@ -229,11 +229,11 @@ fn dialogs() -> impl Widget<AppState> {
             "What to add?",
             Flex::row()
                 .with_child(Button::new("Action").on_click(|ctx, _, _| {
-                    ctx.submit_command(ADVANCE.with(Creating::Action(String::new())), None)
+                    ctx.submit_command(ADVANCE.with(Creating::Action(String::new())))
                 }))
                 .with_spacer(5.0)
                 .with_child(Button::new("Subject").on_click(|ctx, _, _| {
-                    ctx.submit_command(ADVANCE.with(Creating::Subject(String::new())), None)
+                    ctx.submit_command(ADVANCE.with(Creating::Subject(String::new())))
                 })),
         ))
         .action(base(

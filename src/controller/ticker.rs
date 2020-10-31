@@ -47,7 +47,7 @@ impl<W: Widget<AppState>> Controller<AppState, W> for Ticker {
             (false, true) => self.timer = Some(ctx.request_timer(INTERVAL)),
             (true, false) => {
                 self.timer = None;
-                ctx.submit_command(SAVE_NOW, None)
+                ctx.submit_command(SAVE_NOW)
             }
             _ => (),
         }
